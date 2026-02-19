@@ -1,0 +1,149 @@
+@font-face {
+  font-family: 'creato';
+  src: url('assets/creato.otf');
+}
+
+@font-face {
+  font-family: 'inter';
+  src: url('assets/inter.ttf');
+}
+
+:root {
+  --blue: #1D76DB;
+  --white: #FFFFFF;
+  --title-font: 'creato';
+  --primary-font: 'inter';
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-sizing: border-box;
+  font-family: var(--primary-font);
+}
+
+/* login and signup page */
+
+.login-page-outer,
+.signup-page-outer {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: var(--title-font);
+  color: var(--blue);
+  font-size: 160px;
+  text-align: left;
+  margin: 50px;
+}
+
+.action-div {
+  background-color: var(--blue);
+  border-radius: 30px;
+  margin: auto;
+  height: 80vh;
+  aspect-ratio: 7/8;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  justify-content: center;
+  gap: 20px;
+  padding: 30px;
+}
+
+.action-text {
+  color: var(--white);
+  font-size: 28px;
+  font-weight: 500;
+  text-align: left;
+}
+
+#email-input,
+#password-input {
+  color: var(--white);
+  border-radius: 15px;
+  border: 2px solid var(--white);
+  background: none;
+  font-size: 28px;
+  padding: 10px;
+}
+
+#email-input::placeholder,
+#password-input::placeholder {
+  color: #FFFFFF;
+}
+
+.login-btn,
+.signup-btn {
+  background-color: var(--white);
+  border-radius: 15px;
+  color: var(--blue);
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.sign-nav,
+.login-nav {
+  color: var(--white);
+  font-size: 20px;
+  font-weight: 300;
+  text-align: center;
+}
+
+.bold-text {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 1024px) {
+  .login-page-outer,
+  .signup-page-outer {
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .title {
+    font-size: 20vw;
+    margin: 10px;
+    text-align: left;
+  }
+
+  .action-div {
+    margin: 0;
+    width: 100vw;
+    height: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    aspect-ratio: auto;
+    padding: 10px;
+    gap: 20px;
+    padding: 30px;
+    justify-content: start;
+    padding-top: 60px;
+  }
+
+  .action-text {
+    font-size: 6vw;
+  }
+
+  #email-input,
+  #password-input {
+    font-size: 6vw;
+  }
+
+  .login-btn,
+  .signup-btn {
+    font-size: 6vw;
+  }
+
+  .sign-nav,
+  .login-nav {
+    font-size: 5vw;
+  }
+}
