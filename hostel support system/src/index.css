@@ -21,6 +21,11 @@
   border: none;
   box-sizing: border-box;
   font-family: var(--primary-font);
+  cursor: default;
+}
+
+input {
+  cursor: text;
 }
 
 /* login and signup page */
@@ -62,19 +67,33 @@
   text-align: left;
 }
 
-#email-input,
-#password-input {
+#email,
+#password {
   color: var(--white);
   border-radius: 15px;
   border: 2px solid var(--white);
   background: none;
-  font-size: 28px;
+  font-size: 26px;
   padding: 10px;
 }
 
-#email-input::placeholder,
-#password-input::placeholder {
+#email::placeholder,
+#password::placeholder {
   color: #FFFFFF;
+}
+
+#user_type {
+  color: var(--white);
+  border-radius: 15px;
+  border: 2px solid var(--white);
+  background: none;
+  font-size: 26px;
+  padding: 10px;
+}
+
+#user_type option {
+  color: #000;
+  font-size: 22px;
 }
 
 .login-btn,
@@ -85,6 +104,7 @@
   padding: 10px;
   font-size: 30px;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .sign-nav,
@@ -132,7 +152,7 @@
 
   #email-input,
   #password-input {
-    font-size: 5vw;
+    font-size: 4vw;
   }
 
   .login-btn,
@@ -157,7 +177,7 @@
 
   #email-input,
   #password-input {
-    font-size: 6vw;
+    font-size: 5vw;
   }
 
   .login-btn,
@@ -169,4 +189,22 @@
   .login-nav {
     font-size: 5vw;
   }
+}
+
+/* verification page */
+
+.verification-page-outer {
+  height: 100vh;
+  width: 100vw;
+  padding: 30px;
+}
+
+.verification-page-outer p {
+  font-size: 30px;
+  color: #000;
+}
+
+.blue-text {
+  color: var(--blue);
+  cursor: pointer;
 }

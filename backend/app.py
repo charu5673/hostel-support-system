@@ -38,11 +38,28 @@ def get_db_connection():
         port=int(os.getenv("MYSQL_PORT", 3306))
     )
 
+def get_allowed_domains(cursor):
+    cursor.execute(
+        "SELECT domain FROM email_policies WHERE is_active = TRUE"
+    )
+    return [row[0] for row in cursor.fetchall()]
+
+def is_email_allowed(email, allowed_domains):
+    try:
+        domain = email.split("@")[1].lower()
+        return domain in allowed_domains
+    except IndexError:
+        return False
+
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.json
     email = data.get("email", "").strip() if data else ""
     password = data.get("password", "").strip() if data else ""
+    user_type = data.get("user_type", "").strip() if data else "Student"
+
+    print(user_type)
+    print(type(user_type))
 
     if not email or not password:
         return jsonify({"message": "Email and password are required"}), 400
@@ -53,16 +70,35 @@ def signup():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        print('got here 1')
+
+        allowed_domains = get_allowed_domains(cursor)
+
+        print('got here 2')
+        
+        if not is_email_allowed(email, allowed_domains):
+            cursor.close()
+            conn.close()
+            return jsonify({
+                "message": "Email domain not allowed"
+            }), 403
+
+        print('got here 3')
+
         cursor.execute("SELECT id FROM users WHERE email=%s", (email,))
         if cursor.fetchone():
             cursor.close()
             conn.close()
             return jsonify({"message": "User already exists"}), 409
 
+        print('got here 4')
+
         cursor.execute(
-            "INSERT INTO users (email, password, is_verified) VALUES (%s, %s, %s)",
-            (email, password_hash, False)
+            "INSERT INTO users (email, password, is_verified, user_type) VALUES (%s, %s, %s, %s)",
+            (email, password_hash, False, user_type)
         )
+
+        print('got here 5')
         conn.commit()
 
         token = serializer.dumps(email, salt="email-verify")
@@ -114,6 +150,7 @@ def verify_email(token):
 def login():
     data = request.json
     email = data.get("email")
+    print(email)
     password = data.get("password")
 
     try:
