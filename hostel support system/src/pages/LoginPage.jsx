@@ -1,21 +1,15 @@
-// css import
 import '../index.css';
-
-// react functionalities import 
 import { useNavigate } from 'react-router-dom';
 
-// pages import
-
-
-// components import
-
-
-// hooks import
+import { useAlert } from '../contexts/useAlert';
+import { Constants } from '../data/Constants';
 
 
 function LoginPage() {
 
   const navigate = useNavigate();
+  
+    const { showAlert } = useAlert();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,16 +17,23 @@ function LoginPage() {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    const res = await fetch("http://127.0.0.1:5000/login", {
+    const res = await fetch(`${Constants.API}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
-    alert(data.message);
+    showAlert(data.message, res.status == 200 ? "success" : "error");
+    if(res.status == 200) {
+      setTimeout(() => {
+        sessionStorage.clear();
+        navigate('/');
+      }, 2000);
+    }
   };
 
   return (

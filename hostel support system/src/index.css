@@ -13,6 +13,9 @@
   --white: #FFFFFF;
   --title-font: 'creato';
   --primary-font: 'inter';
+  --high-priority: #ff4d4f;
+  --medium-priority: #faad14;
+  --low-priority: #52c41a;
 }
 
 * {
@@ -27,6 +30,21 @@
 input {
   cursor: text;
 }
+
+/* alert */
+
+.alert {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 6px;
+  color: white;
+}
+
+.alert-success { background: #28a745; }
+.alert-error { background: #dc3545; }
+.alert-info { background: #007bff; }
 
 /* login and signup page */
 
@@ -67,8 +85,7 @@ input {
   text-align: left;
 }
 
-#email,
-#password {
+.action-div input, .action-div select {
   color: var(--white);
   border-radius: 15px;
   border: 2px solid var(--white);
@@ -77,23 +94,29 @@ input {
   padding: 10px;
 }
 
-#email::placeholder,
-#password::placeholder {
+.action-div #roll, .action-div #room {
+  font-size: 18px;
+}
+
+.action-div input::placeholder {
   color: #FFFFFF;
-}
-
-#user_type {
-  color: var(--white);
-  border-radius: 15px;
-  border: 2px solid var(--white);
-  background: none;
-  font-size: 26px;
-  padding: 10px;
 }
 
 #user_type option {
   color: #000;
   font-size: 22px;
+}
+
+.student-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.room-input {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .login-btn,
@@ -150,8 +173,7 @@ input {
     font-size: 5vw;
   }
 
-  #email-input,
-  #password-input {
+  .action div input {
     font-size: 4vw;
   }
 
@@ -175,9 +197,15 @@ input {
     padding: 30px;
   }
 
-  #email-input,
-  #password-input {
+  #email,
+  #password, #name {
     font-size: 5vw;
+  }
+
+  .student-options {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
   }
 
   .login-btn,
@@ -208,3 +236,753 @@ input {
   color: var(--blue);
   cursor: pointer;
 }
+
+/* sidebar  */
+
+.sidebar-outer {
+  padding: 20px;
+  background-color: var(--blue);
+  height: 100vh;
+}
+
+.sidebar-title {
+  font-size: 60px;
+  color: var(--white);
+  font-family: var(--title-font);
+  text-align: left;
+}
+
+.sidebar-options {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  height: 55vh;
+}
+
+.sidebar-option {
+  display: grid;
+  grid-template-columns: 30px 1fr 30px;
+  grid-template-rows: 30px 1fr;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-option svg:first-of-type {
+  grid-row: 1/2;
+  grid-column: 1/2;
+  width: 30px;
+  height: 30px;
+  stroke: var(--white);
+}
+
+.sidebar-option-name {
+  grid-row: 1/2;
+  grid-column: 2/3;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--white);
+}
+
+.sidebar-option svg:last-of-type {
+  grid-row: 1/2;
+  grid-column: 3/4;
+  width: 30px;
+  height: 30px;
+  stroke: var(--white);
+  cursor: pointer;
+}
+
+.sidebar-option svg:last-of-type > line {
+  cursor: pointer;
+}
+
+.sidebar-option-extension {
+  grid-row: 2/3;
+  grid-column: 2/3;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.sidebar-extended-option {
+  font-size: 18px;
+  color: var(--white);
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.sidebar-extended-option:hover {
+  text-decoration: underline;
+}
+
+.sidebar-option-extension.closed {
+  display: none;
+}
+
+.sidebar-option-extension.extended + svg {
+  transform: rotateX(180deg);
+}
+
+/* dashboard */
+
+.dashboard-outer {
+  display: grid;
+  grid-template-columns: 25vw 75vw;
+}
+
+/* default dashboard */
+
+.default-dashboard-outer {
+  padding: 30px; 
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr 3fr;
+}
+
+.default-dashboard-outer h2 {
+  margin-bottom: 20px;
+  color: var(--blue);
+  font-size: 40px;
+}
+
+.dashboard-card {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.dashboard-announcement {
+  border-bottom: 1px solid #eee;
+  padding: 12px 0;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.announcements-outer {
+  overflow-y: scroll;
+  height: 50vh;
+}
+
+.announcement-priority {
+    color: var(--white);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.announcement-priority.high {
+  background: var(--high-priority);
+}
+
+.announcement-priority.medium {
+  background: var(--medium-priority);
+}
+
+.announcement-priority.low {
+  background: var(--low-priority);
+}
+
+/* make complaint */
+
+.make-complaint-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.complaint-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(100vh - 60px);
+}
+
+.complaint-form input, .complaint-form select , .complaint-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.complaint-form textarea {
+  font-size: 16px;
+}
+
+.complaint-form #room, .complaint-form #roll {
+  opacity: 0.7;
+}
+
+.complaint-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.complaint-form input::placeholder {
+  color: var(--blue);
+}
+
+.make-complaint-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.complaint-submit-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.complaint-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.back-button {
+  stroke: var(--blue);
+  fill: var(--blue);
+  height: 50px;
+  width: 50px;
+  cursor: pointer;
+  display: inline;
+}
+
+.back-button line, .back-button path {
+  cursor: pointer;
+}
+
+.check-complaints-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.check-complaints-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.check-complaints-top-row h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.complaints-list {
+  overflow-y: scroll;
+  height: 70vh;
+}
+
+.complaint-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.complaint-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.active-filter {
+  background: #2c7be5;
+  color: white;
+}
+
+.complaint-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.complaint-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.complaint-header h3 {
+  text-transform: capitalize;
+}
+
+.complaint-description {
+  margin-bottom: 5px;
+}
+
+.complaint-meta-priority {
+  margin-bottom: 5px;
+  display: block;
+}
+
+.complaint-meta-date {
+  display: block;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.status-pending { background: orange; color: white }
+.status-resolved { background: green; color: white }
+.status-rejected { background: red; color: white }
+.status-in_progress { background: rgb(0, 119, 255); color: white }
+
+
+
+/* apply leave */
+
+.apply-leave-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.leave-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(100vh - 60px);
+}
+
+.leave-form input, .leave-form select , .leave-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.leave-form textarea {
+  font-size: 16px;
+}
+
+.leave-form #roll {
+  opacity: 0.7;
+}
+
+.leave-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.leave-form input::placeholder {
+  color: var(--blue);
+}
+
+.apply-leave-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.leave-submit-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.leave-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.back-button {
+  stroke: var(--blue);
+  fill: var(--blue);
+  height: 50px;
+  width: 50px;
+  cursor: pointer;
+  display: inline;
+}
+
+.back-button line, .back-button path {
+  cursor: pointer;
+}
+
+.check-leave-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.check-leave-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.check-leave-top-row h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.leaves-list {
+  overflow-y: scroll;
+  height: 70vh;
+}
+
+.leave-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.leave-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.active-filter {
+  background: #2c7be5;
+  color: white;
+}
+
+.leave-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.leave-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.leave-header h3 {
+  text-transform: capitalize;
+}
+
+.leave-description {
+  margin-bottom: 5px;
+}
+
+.leave-meta-priority {
+  margin-bottom: 5px;
+  display: block;
+}
+
+.leave-meta-date {
+  display: block;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.status-pending { background: orange; color: white }
+.status-resolved { background: green; color: white }
+.status-rejected { background: red; color: white }
+.status-in_progress { background: rgb(0, 119, 255); color: white }
+
+
+/* mess menu */
+
+.check-menu-outer {
+  height: 100vh;
+  padding: 30px;
+  overflow: scroll;
+}
+
+.check-menu-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.check-menu-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.mess-table {
+  width: 70vw;
+  border-collapse: collapse;
+  height: 70vh;
+}
+
+.mess-table th {
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.mess-table th, .mess-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.mess-table tr:nth-child(even) {
+  background:#fafafa;
+}
+
+.days {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+/* feedback */
+
+.share-feedback-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.feedback-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(100vh - 60px);
+}
+
+.feedback-form input, .feedback-form select , .feedback-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.feedback-form textarea {
+  font-size: 16px;
+}
+
+.feedback-form #roll {
+  opacity: 0.7;
+}
+
+.feedback-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.feedback-form input::placeholder {
+  color: var(--blue);
+}
+
+.share-feedback-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.feedback-submit-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.feedback-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* meal request */
+
+.meal-request-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.request-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(100vh - 60px);
+}
+
+.request-form input, .request-form select , .request-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.request-form textarea {
+  font-size: 16px;
+}
+
+.request-form #roll {
+  opacity: 0.7;
+}
+
+.request-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.request-form input::placeholder {
+  color: var(--blue);
+}
+
+.meal-request-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.meal-request-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.request-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.check-request-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.check-request-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.check-request-top-row h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.requests-list {
+  overflow-y: scroll;
+  height: 70vh;
+}
+
+.request-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.request-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.active-filter {
+  background: #2c7be5;
+  color: white;
+}
+
+.request-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.request-header h3 {
+  text-transform: capitalize;
+}
+
+.request-description {
+  margin-bottom: 5px;
+}
+
+.request-meta-date {
+  display: block;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.status-pending { background: orange; color: white }
+.status-resolved { background: green; color: white }
+.status-rejected { background: red; color: white }
+.status-in_progress { background: rgb(0, 119, 255); color: white }
