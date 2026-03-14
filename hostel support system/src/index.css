@@ -556,7 +556,19 @@ input {
 .status-rejected { background: red; color: white }
 .status-in_progress { background: rgb(0, 119, 255); color: white }
 
+.delete-complaint-button{
+  margin-top:10px;
+  background:#e74c3c;
+  color:white;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
 
+.delete-complaint-button:hover{
+  background:#c0392b;
+}
 
 /* apply leave */
 
@@ -719,9 +731,22 @@ input {
 }
 
 .status-pending { background: orange; color: white }
-.status-resolved { background: green; color: white }
+.status-approved { background: green; color: white }
 .status-rejected { background: red; color: white }
-.status-in_progress { background: rgb(0, 119, 255); color: white }
+
+.cancel-leave-button {
+  margin-top: 10px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-leave-button:hover {
+  background: #c0392b;
+}
 
 
 /* mess menu */
@@ -983,6 +1008,243 @@ input {
 }
 
 .status-pending { background: orange; color: white }
-.status-resolved { background: green; color: white }
+.status-approved { background: green; color: white }
 .status-rejected { background: red; color: white }
-.status-in_progress { background: rgb(0, 119, 255); color: white }
+
+.cancel-request-button{
+  margin-top:10px;
+  background:#e74c3c;
+  color:white;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.cancel-request-button:hover{
+  background:#c0392b;
+}
+
+/* confirm popup */
+
+.confirm-overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.confirm{
+  background:white;
+  padding:20px;
+  border-radius:8px;
+  min-width:280px;
+  text-align:center;
+}
+
+.confirm-buttons{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:15px;
+}
+
+.confirm-yes{
+  background:#e74c3c;
+  color:white;
+  border:none;
+  padding:6px 12px;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.confirm-no{
+  background:#bdc3c7;
+  border:none;
+  padding:6px 12px;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+/* room change */
+
+.room-change-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.room-change-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(100vh - 60px);
+}
+
+.room-change-form input, .room-change-form select , .room-change-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.room-change-form textarea {
+  font-size: 16px;
+}
+
+.room-change-form #roll {
+  opacity: 0.7;
+}
+
+.room-change-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.room-change-form input::placeholder {
+  color: var(--blue);
+}
+
+.room-change-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.room-change-submit-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.room-change-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* report item */
+
+.report-item-outer {
+  padding: 30px;
+  height: 100vh;
+}
+
+.item-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(100vh - 60px);
+}
+
+.item-form input, .item-form select , .item-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 30px;
+}
+
+.item-form textarea {
+  font-size: 16px;
+}
+
+.item-form #roll {
+  opacity: 0.7;
+}
+
+.item-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.item-form input::placeholder {
+  color: var(--blue);
+}
+
+.report-item-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.item-submit-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.item-top-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.upload-box {
+  border: 2px dashed #bbb;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 30px;
+  cursor: pointer;
+  position: relative;
+}
+
+.upload-box p {
+  cursor: pointer;
+}
+
+.upload-box.drag-active {
+  border-color: #4a90e2;
+  background: #f5f9ff;
+}
+
+.upload-box input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.item-image-preview {
+  max-width: 200px;
+  margin-top: 10px;
+}
+
+.report-image {
+  max-width: 20vw;
+  max-height: 20vh;
+}

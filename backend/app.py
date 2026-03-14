@@ -23,6 +23,10 @@ from flask_jwt_extended import (
     verify_jwt_in_request
 )
 
+import cloudinary
+import cloudinary.uploader
+import os
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -47,6 +51,11 @@ app.config["JWT_COOKIE_SAMESITE"] = "Lax"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
 
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
 
 jwt = JWTManager(app)
 
@@ -465,6 +474,31 @@ def get_user_complaints():
             "error": str(e)
         }), 500
 
+@app.route("/delete-complaint/<int:complaint_id>", methods=["DELETE"])
+@student_required
+def delete_complaint(complaint_id):
+
+    claims = get_jwt()
+    roll_no = claims["roll_no"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM complaints
+        WHERE id=%s AND roll_no=%s AND status='pending'
+        """,
+        (complaint_id, roll_no)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Complaint deleted"}), 200
+
 @app.route("/apply-for-leave", methods=["POST"])
 @student_required
 def apply_for_leave():
@@ -550,6 +584,31 @@ def get_user_leaves():
             "message": "Could not fetch leaves",
             "error": str(e)
         }), 500
+    
+@app.route("/cancel-leave/<int:leave_id>", methods=["DELETE"])
+@student_required
+def cancel_leave(leave_id):
+
+    claims = get_jwt()
+    roll_no = claims["roll_no"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM leaves
+        WHERE id=%s AND roll_no=%s AND status='pending'
+        """,
+        (leave_id, roll_no)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message":"Leave cancelled"}),200
     
 @app.route("/get-mess-menu", methods=["GET"])
 @jwt_required()
@@ -657,9 +716,9 @@ def meal_request():
         print(str(e))
         return jsonify({"message":"Request could not be submitted!","error":str(e)}),500
 
-@app.route("/get-user-requests", methods=["GET"])
+@app.route("/get-user-meal-requests", methods=["GET"])
 @student_required
-def get_user_requests():
+def get_user_meal_requests():
 
     try:
 
@@ -699,6 +758,322 @@ def get_user_requests():
 
         return jsonify({
             "message": "Could not fetch requests",
+            "error": str(e)
+        }), 500
+
+@app.route("/cancel-meal-request/<int:request_id>", methods=["DELETE"])
+@student_required
+def cancel__meal_request(request_id):
+
+    claims = get_jwt()
+    roll_no = claims["roll_no"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM meal_requests
+        WHERE id=%s AND roll_no=%s AND status='pending'
+        """,
+        (request_id, roll_no)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Request cancelled"}), 200
+
+@app.route("/room-change-request", methods=["POST"])
+@student_required
+def room_change_request():
+
+    data = request.json
+    reason = data.get("reason", "")
+    roll_no = int(data.get("roll_no", 0))
+    room = int(data.get("room", 0))
+
+    if not roll_no or not room:
+        return jsonify({"message":"Roll No. and room are required."}), 400
+
+    if len(reason) < 10 or len(reason) > 300:
+        return jsonify({"message": "Reason must be between 10 and 300 characters."}), 400
+
+    try:
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM room_change WHERE roll_no=%s",(roll_no,))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({"message":"User has a pending room change request!"}),409
+
+        cursor.execute(
+            """
+            INSERT INTO room_change
+            (roll_no, reason, current_room)
+            VALUES (%s,%s,%s)
+            """,
+            (roll_no, reason, room)
+        )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message":"Request submitted!"}),200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Request could not be submitted!","error":str(e)}),500
+
+@app.route("/get-user-room-change-requests", methods=["GET"])
+@student_required
+def get_user_room_change_requests():
+
+    try:
+
+        claims = get_jwt()
+        roll_no = claims["roll_no"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                reason,
+                status,
+                created_at,
+                current_room,
+                new_room
+            FROM room_change
+            WHERE roll_no = %s
+            ORDER BY
+                created_at DESC
+            """,
+            (roll_no,)
+        )
+
+        requests = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(requests), 200
+
+    except Exception as e:
+
+        print(str(e))
+
+        return jsonify({
+            "message": "Could not fetch requests",
+            "error": str(e)
+        }), 500
+
+@app.route("/cancel-room-change-request/<int:request_id>", methods=["DELETE"])
+@student_required
+def cancel_room_change_request(request_id):
+
+    claims = get_jwt()
+    roll_no = claims["roll_no"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM room_change
+        WHERE id=%s AND roll_no=%s AND status='pending'
+        """,
+        (request_id, roll_no)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Request cancelled"}), 200
+
+@app.route("/report-item", methods=["POST"])
+@student_required
+def report_item():
+
+    name = request.form.get("name")
+    description = request.form.get("description")
+    image = request.files.get("image")
+    roll_no = int(request.form.get("roll_no"))
+    date = request.form.get("date")
+    contact = request.form.get("contact")
+    report_type = request.form.get("item_type")
+
+    url = None
+
+    if image:
+        req = cloudinary.uploader.upload(image, folder="lost_found")
+        url = req["secure_url"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+            INSERT INTO lost_and_found
+            (roll_no, description, item_name, image, date, contact, report_type)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """,
+        (roll_no, description, name, url, date, contact, report_type)
+    )
+    conn.commit()
+
+    return {"message": "Item reported successfully!"}
+
+@app.route("/get-user-item-reports", methods=["GET"])
+@student_required
+def get_user_item_reports():
+
+    try:
+
+        claims = get_jwt()
+        roll_no = claims["roll_no"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                item_name,
+                description,
+                image,
+                contact,
+                report_type,
+                status,
+                date
+            FROM lost_and_found
+            WHERE roll_no = %s
+            ORDER BY
+                date DESC
+            """,
+            (roll_no,)
+        )
+
+        reports = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(reports), 200
+
+    except Exception as e:
+
+        print(str(e))
+
+        return jsonify({
+            "message": "Could not fetch reports",
+            "error": str(e)
+        }), 500
+
+@app.route("/close-lost-report/<int:request_id>", methods=["PUT"])
+@student_required
+def close_lost_report(request_id):
+
+    claims = get_jwt()
+    roll_no = claims["roll_no"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE lost_and_found
+        SET status='closed'
+        WHERE id=%s AND roll_no=%s AND status='open'
+        """,
+        (request_id, roll_no)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Report closed"}), 200
+
+@app.route("/claim-found-item/<int:request_id>", methods=["PUT"])
+@student_required
+def claim_found_item(request_id):
+
+    claims = get_jwt()
+    roll_no = claims["roll_no"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE lost_and_found
+        SET status='claimed'
+        WHERE id=%s AND roll_no=%s AND status='open'
+        """,
+        (request_id, roll_no)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Item marked as claimed"}), 200
+
+@app.route("/get-reported-items", methods=["GET"])
+@student_required
+def get_item_reports():
+
+    try:
+
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                item_name,
+                description,
+                image,
+                contact,
+                report_type,
+                status,
+                date
+            FROM lost_and_found
+            WHERE status='open'
+            ORDER BY
+                date DESC
+            """
+        )
+
+        reports = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(reports), 200
+
+    except Exception as e:
+
+        print(str(e))
+
+        return jsonify({
+            "message": "Could not fetch reports",
             "error": str(e)
         }), 500
 

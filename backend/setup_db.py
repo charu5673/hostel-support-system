@@ -192,8 +192,10 @@ CREATE TABLE IF NOT EXISTS room_change (
     id INT AUTO_INCREMENT PRIMARY KEY,
     reason TEXT,
     current_room INT NOT NULL,
+    new_room INT,
     roll_no INT NOT NULL,
-    status ENUM('pending','approved','rejected') DEFAULT 'pending'
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 """
 cursor.execute(create_room_change_table)

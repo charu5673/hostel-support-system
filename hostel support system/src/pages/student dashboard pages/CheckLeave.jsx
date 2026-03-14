@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react'
 import { useAlert } from "../../contexts/useAlert"
 import { Constants } from '../../data/Constants'
 import BackButton from '../../components/BackButton'
+import { useConfirm } from '../../contexts/useConfirm'
 
 function CheckLeave({ handleBack }) {
 
   const { showAlert } = useAlert()
   const API = Constants['API']
+  const { showConfirm } = useConfirm()
 
   const [leaves, setLeaves] = useState([])
   const [filter, setFilter] = useState("all")
@@ -35,6 +37,33 @@ function CheckLeave({ handleBack }) {
 
     loadLeaves()
   }, [])
+
+  const cancelLeave = async (id) => {
+
+    const confirmCancel = await showConfirm("Cancel this leave?")
+    if (!confirmCancel) return
+
+    try {
+
+      const res = await fetch(`${API}/cancel-leave/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      })
+
+      if (!res.ok) {
+        showAlert("Could not cancel leave!", "error")
+        return
+      }
+
+      setLeaves(prev => prev.filter(l => l.id !== id))
+
+      showAlert("Leave cancelled successfully!", "success")
+
+    } catch {
+      showAlert("Failed to cancel leave!", "error")
+    }
+
+  }
 
   const filteredLeaves =
     filter === "all"
@@ -94,7 +123,10 @@ function CheckLeave({ handleBack }) {
                 <div className='leave-card' key={l.id}>
 
                   <div className='leave-header'>
-                    <h3>{new Date(l.start_date).toLocaleDateString()} - {new Date(l.end_date).toLocaleDateString()}</h3>
+                    <h3>
+                      {new Date(l.start_date).toLocaleDateString()} - {new Date(l.end_date).toLocaleDateString()}
+                    </h3>
+
                     <span className={`status-badge status-${l.status}`}>
                       {l.status}
                     </span>
@@ -110,6 +142,15 @@ function CheckLeave({ handleBack }) {
                     </span>
                   </div>
 
+                  {l.status === "pending" && (
+                    <button
+                      className='cancel-leave-button'
+                      onClick={() => cancelLeave(l.id)}
+                    >
+                      Cancel
+                    </button>
+                  )}
+
                 </div>
               ))
             )}
@@ -122,4 +163,4 @@ function CheckLeave({ handleBack }) {
   )
 }
 
-export default CheckLeave;
+export default CheckLeave

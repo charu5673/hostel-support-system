@@ -40,14 +40,15 @@ export const studentOptions = [
     svg: <LostAndFoundSVG />,
     actions: [
     { name: 'Report an item', id: 11 },
-    { name: 'View reported items', id: 12 },
+    { name: 'Your reports', id: 12 },
+    { name: 'View reported items', id: 13 },
     ]
   },
   {
     name: 'Timings',
     svg: <TimingsSVG />,
     actions: [
-    { name: 'View hostel facilities timings', id: 13 },
+    { name: 'View hostel facilities timings', id: 14 },
     ]
   }
   ];

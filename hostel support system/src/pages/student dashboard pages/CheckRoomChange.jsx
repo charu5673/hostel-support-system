@@ -5,7 +5,7 @@ import { Constants } from '../../data/Constants'
 import BackButton from '../../components/BackButton'
 import { useConfirm } from '../../contexts/useConfirm'
 
-function CheckRequest({ handleBack }) {
+function CheckRoomChange({ handleBack }) {
 
   const { showAlert } = useAlert()
   const API = Constants['API']
@@ -18,7 +18,7 @@ function CheckRequest({ handleBack }) {
     const loadRequests = async () => {
       try {
 
-        const res = await fetch(`${API}/get-user-meal-requests`, {
+        const res = await fetch(`${API}/get-user-room-change-requests`, {
           credentials: "include"
         })
 
@@ -45,7 +45,7 @@ function CheckRequest({ handleBack }) {
 
     try {
 
-      const res = await fetch(`${API}/cancel-meal-request/${id}`, {
+      const res = await fetch(`${API}/cancel-room-change-request/${id}`, {
         method: "DELETE",
         credentials: "include"
       })
@@ -122,7 +122,7 @@ function CheckRequest({ handleBack }) {
                 <div className='request-card' key={l.id}>
 
                   <div className='request-header'>
-                    <h3>{l.day} - {l.meal_time}</h3>
+                    <h3>{l.current_room}</h3>
                     <span className={`status-badge status-${l.status}`}>
                       {l.status}
                     </span>
@@ -159,4 +159,4 @@ function CheckRequest({ handleBack }) {
   )
 }
 
-export default CheckRequest
+export default CheckRoomChange

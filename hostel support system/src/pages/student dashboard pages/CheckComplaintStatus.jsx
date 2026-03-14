@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react'
 import { useAlert } from "../../contexts/useAlert"
 import { Constants } from '../../data/Constants'
 import BackButton from '../../components/BackButton'
+import { useConfirm } from '../../contexts/useConfirm'
 
 function CheckComplaints({ handleBack }) {
 
   const { showAlert } = useAlert()
   const API = Constants['API']
+  const { showConfirm } = useConfirm()
 
   const [complaints, setComplaints] = useState([])
   const [filter, setFilter] = useState("all")
@@ -35,6 +37,32 @@ function CheckComplaints({ handleBack }) {
 
     loadComplaints()
   }, [])
+
+  const deleteComplaint = async (id) => {
+
+    const confirmCancel = await showConfirm("Delete this complaint?")
+    if (!confirmCancel) return
+
+    try {
+
+      const res = await fetch(`${API}/delete-complaint/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      })
+
+      if (!res.ok) {
+        showAlert("Could not delete complaint!", "error")
+        return
+      }
+
+      setComplaints(prev => prev.filter(c => c.id !== id))
+
+      showAlert("Complaint deleted!", "success")
+
+    } catch {
+      showAlert("Failed to delete complaint!", "error")
+    }
+  }
 
   const filteredComplaints =
     filter === "all"
@@ -112,11 +140,23 @@ function CheckComplaints({ handleBack }) {
                   </p>
 
                   <div className='complaint-meta'>
-                    <span className='complaint-meta-priority'>Priority: {c.priority}</span>
+                    <span className='complaint-meta-priority'>
+                      Priority: {c.priority}
+                    </span>
+
                     <span className='complaint-meta-date'>
                       {new Date(c.created_at || c.datetime).toLocaleDateString()}
                     </span>
                   </div>
+
+                  {c.status === "pending" && (
+                    <button
+                      className='delete-complaint-button'
+                      onClick={() => deleteComplaint(c.id)}
+                    >
+                      Delete
+                    </button>
+                  )}
 
                 </div>
               ))
