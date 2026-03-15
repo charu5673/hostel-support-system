@@ -127,7 +127,11 @@ function CheckRoomChange({ handleBack }) {
                       {l.status}
                     </span>
                   </div>
-
+                  {
+                    l.new_room != '' && l.new_room ?
+                      <p>{l.status === "pending" ? "Requested:" : "Assigned:"} {l.new_room}</p> :
+                      null
+                  }
                   <p className='request-description'>
                     {l.reason}
                   </p>

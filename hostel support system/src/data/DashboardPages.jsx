@@ -12,6 +12,7 @@ import CheckRoomChange from "../pages/student dashboard pages/CheckRoomChange";
 import ReportItem from "../pages/student dashboard pages/ReportItem";
 import CheckItemReports from "../pages/student dashboard pages/CheckItemReports";
 import ViewItems from "../pages/student dashboard pages/ViewItems";
+import FacilityTimings from "../pages/student dashboard pages/FacilityTimings";
 
 export const DashboardPages = {
   'student': [
@@ -28,7 +29,8 @@ export const DashboardPages = {
     CheckRoomChange,
     ReportItem,
     CheckItemReports,
-    ViewItems
+    ViewItems,
+    FacilityTimings
   ],
   'warden': [
     DashboardDefault

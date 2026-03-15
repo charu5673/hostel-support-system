@@ -122,7 +122,7 @@ function CheckRequest({ handleBack }) {
                 <div className='request-card' key={l.id}>
 
                   <div className='request-header'>
-                    <h3>{l.day} - {l.meal_time}</h3>
+                    <h3>{l.day ? l.day : new Date(l.date).toLocaleDateString()} - {l.meal_time}</h3>
                     <span className={`status-badge status-${l.status}`}>
                       {l.status}
                     </span>
