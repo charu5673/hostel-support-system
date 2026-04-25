@@ -1,0 +1,183 @@
+/* Warden leave view styles */
+
+.view-leaves-outer {
+  padding: 30px;
+  height: 90vh;
+}
+
+.view-leaves-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.view-leaves-outer h2 {
+  color: var(--blue);
+  font-size: 28px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+.leave-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.leave-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.leaves-list {
+  overflow-y: scroll;
+  height: 70vh;
+}
+
+.leave-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.leave-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.leave-header-left {
+  flex: 1;
+}
+
+.leave-header h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.leave-dates {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.leave-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  border: 1px solid #e0e0e0;
+}
+
+.status-pending {
+  background: #f39c12;
+  color: white;
+}
+
+.status-in_progress {
+  background: #3498db;
+  color: white;
+}
+
+.status-approved {
+  background: #27ae60;
+  color: white;
+}
+
+.status-rejected {
+  background: #e74c3c;
+  color: white;
+}
+
+.leave-date {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+}
+
+.leave-description {
+  background: #f8f8f8;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  color: #333;
+  line-height: 1.4;
+  display: inline-block;
+  width: fit-content;
+}
+
+.leave-note {
+  background: #f0f8ff;
+  border-left: 4px solid var(--blue);
+  padding: 8px 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  font-style: italic;
+  color: #333;
+  display: block;
+  width: fit-content;
+}
+
+.leave-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.leave-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.leave-actions button:nth-child(1) {
+  background: #27ae60;
+  color: white;
+}
+
+.leave-actions button:nth-child(1):hover {
+  background: #229954;
+}
+
+.leave-actions button:nth-child(2) {
+  background: #3498db;
+  color: white;
+}
+
+.leave-actions button:nth-child(2):hover {
+  background: #2980b9;
+}
+
+.leave-actions button:nth-child(3) {
+  background: #e74c3c;
+  color: white;
+}
+
+.leave-actions button:nth-child(3):hover {
+  background: #c0392b;
+}

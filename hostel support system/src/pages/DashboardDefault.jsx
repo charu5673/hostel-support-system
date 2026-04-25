@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react"
 import { Constants } from "../data/Constants"
-import { useAlert } from "../contexts/useAlert"
+import { useAlert } from "../contexts/alert/useAlert"
+import { useLoading } from "../contexts/loading/useLoading"
 
 export default function DashboardDefault({ user }) {
 
   const [announcements, setAnnouncements] = useState([])
   const { showAlert } = useAlert()
+  const { loadingFetch } = useLoading()
 
   useEffect(() => {
 
@@ -13,7 +15,7 @@ export default function DashboardDefault({ user }) {
 
       try {
 
-        const res = await fetch(`${Constants['API']}/announcements`, {
+        const res = await loadingFetch(`${Constants['API']}${Constants.ROUTES.GET_ANNOUNCEMENTS}`, {
           credentials: "include"
         })
 

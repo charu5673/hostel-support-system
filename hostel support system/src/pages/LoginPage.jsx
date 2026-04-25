@@ -1,7 +1,8 @@
 import '../index.css';
 import { useNavigate } from 'react-router-dom';
 
-import { useAlert } from '../contexts/useAlert';
+import { useAlert } from '../contexts/alert/useAlert';
+import { useLoading } from '../contexts/loading/useLoading';
 import { Constants } from '../data/Constants';
 
 
@@ -9,7 +10,8 @@ function LoginPage() {
 
   const navigate = useNavigate();
   
-    const { showAlert } = useAlert();
+  const { showAlert } = useAlert();
+  const { loadingFetch } = useLoading();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ function LoginPage() {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    const res = await fetch(`${Constants.API}/login`, {
+    const res = await loadingFetch(`${Constants.API}${Constants.ROUTES.LOGIN}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

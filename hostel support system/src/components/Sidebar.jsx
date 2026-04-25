@@ -44,6 +44,7 @@ function Sidebar({options, changePage}) {
           })
         }
       </div>
+      <div className='sidebar-profile-row'></div>
     </div>
   );
 }

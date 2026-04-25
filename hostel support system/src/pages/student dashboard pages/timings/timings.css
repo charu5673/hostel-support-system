@@ -1,0 +1,39 @@
+/* facility timings */
+
+.check-timings-outer {
+  height: 90vh;
+  padding: 30px;
+  overflow: scroll;
+}
+
+.check-timings-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.timings-table {
+  width: 70vw;
+  border-collapse: collapse;
+  height: 70vh;
+}
+
+.timings-table th {
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.timings-table th, .timings-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.timings-table tr:nth-child(even) {
+  background:#fafafa;
+}
+
+.days {
+  color: var(--blue);
+  font-weight: 800;
+}

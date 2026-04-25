@@ -1,15 +1,18 @@
 import '../index.css';
 import Sidebar from '../components/Sidebar';
-import { studentOptions } from '../data/SidebarOptions';
+import { studentOptions, wardenOptions, messOptions, adminOptions } from '../data/SidebarOptions';
 import { DashboardPages } from '../data/DashboardPages';
 import { useState, useEffect } from 'react';
-import { useAlert } from "../contexts/useAlert"
+import { useAlert } from "../contexts/alert/useAlert"
+import { useLoading } from "../contexts/loading/useLoading"
 import { useNavigate } from "react-router-dom"
 import { Constants } from '../data/Constants';
+import TopBar from '../components/Topbar';
 
 function Dashboard() {
 
   const { showAlert } = useAlert()
+  const { loadingFetch } = useLoading()
   const navigate = useNavigate()
   const API = Constants['API']
 
@@ -20,7 +23,7 @@ function Dashboard() {
     const loadUser = async () => {
       try {
 
-        const res = await fetch(`${API}/me`, {
+        const res = await loadingFetch(`${API}${Constants.ROUTES.ME}`, {
           credentials: "include"
         })
 
@@ -55,10 +58,22 @@ function Dashboard() {
     setCurrentPageIndex(i);
   }
 
+  const options = {
+    'student': studentOptions,
+    'warden': wardenOptions,
+    'mess': messOptions,
+    'admin': adminOptions
+  }
+
   return (
     <div className='dashboard-outer'>
-      <Sidebar options={studentOptions} changePage={handlePageChange} />
-      <CurrentPage user={user} handleBack={() => handlePageChange(0)} />
+      {
+        user ?
+        <Sidebar options={options[user.role]} changePage={handlePageChange} /> :
+        null
+      }
+      <TopBar handleBack={() => handlePageChange(0)} />
+      <CurrentPage user={user} />
     </div>
   )
 }

@@ -1,0 +1,269 @@
+/* room change */
+
+.room-change-outer {
+  padding: 30px;
+  height: 90vh;
+}
+
+.room-change-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(90vh - 60px);
+}
+
+.room-change-form input, .room-change-form select , .room-change-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.room-change-form textarea {
+  font-size: 16px;
+}
+
+.room-change-form #roll {
+  opacity: 0.7;
+}
+
+.room-change-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.room-change-form input::placeholder {
+  color: var(--blue);
+}
+
+.room-change-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.room-change-submit-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.check-request-outer {
+  padding: 30px;
+  height: 90vh;
+}
+
+.check-request-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.requests-list {
+  overflow-y: scroll;
+  height: 70vh;
+}
+
+.request-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.request-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.request-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.request-header-left {
+  flex: 1;
+}
+
+.request-header-left h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.request-current-room {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.request-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.request-date {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+}
+
+.request-description {
+  background: #f8f8f8;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  color: #333;
+  line-height: 1.4;
+  display: inline-block;
+  width: fit-content;
+}
+
+.request-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.request-meta-date {
+  background: #f5f5f5;
+  padding: 6px 10px;
+  border-radius: 3px;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.request-note {
+  background: #f0f8ff;
+  border-left: 4px solid var(--blue);
+  padding: 8px 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  font-style: italic;
+  color: #333;
+  display: block;
+  width: fit-content;
+}
+
+.cancel-request-button{
+  margin-top:10px;
+  background:#e74c3c;
+  color:white;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  display: block;
+}
+
+.cancel-request-button:hover{
+  background:#c0392b;
+}
+
+/* Warden view styles */
+.view-request-outer {
+  padding: 30px;
+  height: 90vh;
+}
+
+.view-request-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.view-request-outer h2 {
+  color: var(--blue);
+  font-size: 28px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+.request-header-left {
+  flex: 1;
+}
+
+.request-header-left h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.request-current-room {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.request-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.request-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.request-actions button:nth-child(1) {
+  background: #27ae60;
+  color: white;
+}
+
+.request-actions button:nth-child(1):hover {
+  background: #229954;
+}
+
+.request-actions button:nth-child(2) {
+  background: #e74c3c;
+  color: white;
+}
+
+.request-actions button:nth-child(2):hover {
+  background: #c0392b;
+}

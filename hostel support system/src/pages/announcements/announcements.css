@@ -1,0 +1,219 @@
+/* announcements */
+
+.submit-announcement-outer {
+  padding: 30px;
+  height: 90vh;
+}
+
+.announcement-form {
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow-y: scroll;
+  height: calc(90vh - 60px);
+}
+
+.announcement-form input, .announcement-form select , .announcement-form textarea{
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 20px;
+  padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.announcement-form textarea {
+  font-size: 16px;
+}
+
+.announcement-form #roll {
+  opacity: 0.7;
+}
+
+.announcement-form label {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 22px;
+  display: block;
+}
+
+.announcement-form input::placeholder {
+  color: var(--blue);
+}
+
+.submit-announcement-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.announcement-submit-btn {
+  margin-top: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+/* Check announcements styles */
+
+.check-announcements-outer {
+  padding: 30px;
+  height: 90vh;
+}
+
+.check-announcements-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.check-announcements-outer h2 {
+  color: var(--blue);
+  font-size: 28px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+.announcements-list {
+  overflow-y: scroll;
+  height: 70vh;
+}
+
+.announcement-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.announcement-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.announcement-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.announcement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.announcement-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.announcement-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.priority-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  border: 1px solid #e0e0e0;
+}
+
+.priority-high {
+  background: #ffcccc;
+  color: #c0392b;
+}
+
+.priority-medium {
+  background: #ffe6cc;
+  color: #e67e22;
+}
+
+.priority-low {
+  background: #ccffcc;
+  color: #27ae60;
+}
+
+.announcement-type {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+  text-transform: capitalize;
+}
+
+.announcement-date {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+}
+
+.announcement-description {
+  background: #f8f8f8;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  color: #333;
+  line-height: 1.4;
+  display: inline-block;
+  width: fit-content;
+}
+
+.announcement-meta {
+  margin-bottom: 8px;
+}
+
+.announcement-meta-duration {
+  background: #f5f5f5;
+  padding: 6px 10px;
+  border-radius: 3px;
+  color: #777;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
+}
+
+.delete-announcement-button {
+  margin-top: 10px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: block;
+}
+
+.delete-announcement-button:hover {
+  background: #c0392b;
+}

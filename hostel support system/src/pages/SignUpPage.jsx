@@ -2,8 +2,9 @@ import '../index.css';
 import { useNavigate } from 'react-router-dom';
 import { useRef } from 'react';
 import { useState } from 'react';
-
-import { useAlert } from '../contexts/useAlert';
+import { Constants } from '../data/Constants';
+import { useAlert } from '../contexts/alert/useAlert';
+import { useLoading } from '../contexts/loading/useLoading';
 
 
 function SignUpPage() {
@@ -13,6 +14,7 @@ function SignUpPage() {
   const select = useRef();
 
   const { showAlert } = useAlert();
+  const { loadingFetch } = useLoading();
 
   const [studentSignup, setStudentSignup] = useState(true);
 
@@ -23,21 +25,23 @@ function SignUpPage() {
     const email = e.target.email.value;
     const password = e.target.password.value;
     const user_type = select.current.value;
-    const room = e.target.room.value;
-    const roll_no = e.target.roll.value;
+    const room = (user_type == 'student') ? e.target.room.value : null;
+    const roll_no = (user_type == 'student') ? e.target.roll.value : null;
 
-    if(user_type == "Student" && (!room || !roll_no)) {
+    if(user_type == "student" && (!room || !roll_no)) {
       showAlert("Room and roll no. are required for student signup!", "error");
       return;
     }
 
-    const res = await fetch("http://localhost:5000/signup", {
+    const res = await loadingFetch(`${Constants.API}${Constants.ROUTES.SIGNUP}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: studentSignup ? JSON.stringify({ name, email, password, user_type, room, roll_no }) : JSON.stringify({ name, email, password, user_type }),
     });
+
+    console.log(user_type)
 
     const data = await res.json();
 

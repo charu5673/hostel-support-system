@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../index.css';
+import { useLoading } from '../contexts/loading/useLoading';
+import { Constants } from '../data/Constants';
 
 function VerificationPage() {
   const { token } = useParams();
@@ -8,6 +10,7 @@ function VerificationPage() {
 
   const [statusIndex, setStatusIndex] = useState(0);
   const ranRef = useRef(false);
+  const { loadingFetch } = useLoading();
 
   const status = [
     <p key="loading" className="verification-text">
@@ -33,8 +36,8 @@ function VerificationPage() {
 
     const verify = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:5000/verify/${token}`
+        const res = await loadingFetch(
+          `${Constants.API}${Constants.ROUTES.VERIFY}/${token}`
         );
 
         if (!res.ok) {

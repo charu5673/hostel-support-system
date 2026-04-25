@@ -1,0 +1,169 @@
+﻿.view-meal-requests-outer {
+  padding: 30px;
+  height: 90vh;
+}
+
+.view-meal-requests-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.meal-request-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.meal-request-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #f4f7ff;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.meal-request-filter-row button.active-filter {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.meal-requests-list {
+  overflow-y: scroll;
+  height: 70vh;
+}
+
+.meal-request-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.meal-request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.meal-request-header-left {
+  flex: 1;
+}
+
+.meal-request-header-left h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.meal-request-meta {
+  margin: 4px 0 0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.meal-request-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  border: 1px solid #e0e0e0;
+}
+
+.status-pending {
+  background: #f39c12;
+  color: white;
+}
+
+.status-approved {
+  background: #27ae60;
+  color: white;
+}
+
+.status-rejected {
+  background: #e74c3c;
+  color: white;
+}
+
+.meal-request-date {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+}
+
+.meal-request-description {
+  background: #f8f8f8;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  color: #333;
+  line-height: 1.4;
+  display: inline-block;
+  width: fit-content;
+}
+
+.meal-request-note {
+  background: #f0f8ff;
+  border-left: 4px solid var(--blue);
+  padding: 8px 12px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  font-style: italic;
+  color: #333;
+  display: block;
+  width: fit-content;
+}
+
+.meal-request-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meal-request-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+}
+
+.meal-request-actions button:first-child {
+  background: #27ae60;
+}
+
+.meal-request-actions button:first-child:hover {
+  background: #229954;
+}
+
+.meal-request-actions button:last-child {
+  background: #e74c3c;
+}
+
+.meal-request-actions button:last-child:hover {
+  background: #c0392b;
+}

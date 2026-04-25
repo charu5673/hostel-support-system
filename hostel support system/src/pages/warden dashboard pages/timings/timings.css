@@ -1,0 +1,248 @@
+.check-timings-outer {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100%;
+}
+
+.timings-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.check-timings-outer h2 {
+  color: var(--blue);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.add-facility-btn {
+  background: var(--blue);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-facility-btn:hover {
+  background: #145ca8;
+}
+
+.timings-card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(23, 75, 150, 0.08);
+  max-height: 66vh;
+  overflow: auto;
+}
+
+.timings-card::-webkit-scrollbar {
+  width: 10px;
+}
+
+.timings-card::-webkit-scrollbar-track {
+  background: #f1f5fa;
+  border-radius: 10px;
+}
+
+.timings-card::-webkit-scrollbar-thumb {
+  background: rgba(29, 118, 219, 0.35);
+  border-radius: 10px;
+}
+
+.timings-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+}
+
+.timings-table th,
+.timings-table td {
+  text-align: left;
+  padding: 14px 12px;
+  border-bottom: 1px solid #e8eef6;
+}
+
+.timings-table th {
+  background: #f2f8ff;
+  color: #1e3e6f;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.timings-table td {
+  color: #333;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.facility-cell {
+  font-weight: 600;
+  color: #1b4f96;
+  cursor: pointer;
+}
+
+.editable-cell {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.editable-cell:hover,
+.facility-cell:hover {
+  background: #f6fbff;
+}
+
+.empty-row {
+  text-align: center;
+  color: #5f6c7c;
+  padding: 38px 0;
+}
+
+.remove-facility-btn {
+  background: #f15f5f;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.remove-facility-btn:hover {
+  background: #d64b4b;
+}
+
+.timings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(7, 20, 61, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.timings-modal {
+  background: white;
+  width: min(720px, 100%);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(18, 58, 119, 0.14);
+}
+
+.timings-modal-header h3 {
+  margin: 0 0 16px 0;
+  color: var(--blue);
+  font-size: 22px;
+}
+
+.timings-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.timings-modal-body label {
+  font-size: 14px;
+  color: #4b596c;
+  font-weight: 600;
+}
+
+.timings-modal-body input[type='text'],
+.timings-modal-body input[type='time'] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d7dee8;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1f334f;
+  background: #fbfdff;
+}
+
+.timings-day-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.timings-day-row {
+  display: grid;
+  grid-template-columns: 160px 120px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef3f8;
+}
+
+.single-day-row {
+  grid-template-columns: 140px 140px 1fr;
+}
+
+.timings-day-label {
+  font-weight: 700;
+  color: #2b4368;
+}
+
+.timings-closed-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b596c;
+  font-size: 14px;
+}
+
+.timings-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.timings-time-inputs span {
+  color: #50647c;
+  font-size: 14px;
+}
+
+.timings-modal-error {
+  color: #d92d2d;
+  font-size: 13px;
+  margin: 0;
+}
+
+.timings-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.timings-save-btn,
+.timings-cancel-btn {
+  padding: 12px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.timings-save-btn {
+  background: var(--blue);
+  color: white;
+}
+
+.timings-save-btn:hover {
+  background: #145ca8;
+}
+
+.timings-cancel-btn {
+  background: #f4f6fb;
+  color: #2b3c55;
+}
+
+.timings-cancel-btn:hover {
+  background: #e8edf5;
+}

@@ -1,0 +1,39 @@
+/* mess menu */
+
+.check-menu-outer {
+  height: 90vh;
+  padding: 30px;
+  overflow: scroll;
+}
+
+.check-menu-outer h2 {
+  color: var(--blue);
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.mess-table {
+  width: 70vw;
+  border-collapse: collapse;
+  height: 70vh;
+}
+
+.mess-table th {
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.mess-table th, .mess-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.mess-table tr:nth-child(even) {
+  background:#fafafa;
+}
+
+.days {
+  color: var(--blue);
+  font-weight: 800;
+}
