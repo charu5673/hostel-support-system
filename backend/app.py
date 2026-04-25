@@ -98,15 +98,10 @@ def student_required(fn):
 
 
 def mess_required(fn):
-    return role_required("mess_incharge")(fn)
+    return role_required("mess")(fn)
 
 
 # ---------------------------
-
-
-@app.route("/")
-def home():
-    return jsonify({"message": "Backend is running"})
 
 
 def get_db_connection():
@@ -132,6 +127,25 @@ def is_email_allowed(email, allowed_domains):
         return domain in allowed_domains
     except IndexError:
         return False
+    
+def add_to_updates_history(table, user_id, entry_id, action):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO updates_history
+            (table, user_id, entry_id, action_type)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (table, user_id, entry_id, action)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(str(e))
 
 
 @app.route("/signup", methods=["POST"])
@@ -143,7 +157,6 @@ def signup():
     password = data.get("password","").strip()
     user_type = data.get("user_type","student")
     room = int(data.get("room",0))
-    print(room)
     roll_no = int(data.get("roll_no",0))
 
     if not email or not password:
@@ -218,12 +231,24 @@ def signup():
 
         mail.send(msg)
 
+        cursor.execute(
+            """
+            SELECT id FROM users
+            WHERE email=%s
+            """,
+            (email,)
+        )
+        user_id = cursor.fetchone()
+
         cursor.close()
         conn.close()
+
+        add_to_updates_history('signup', user_id, user_id, 'signup')
 
         return jsonify({"message":"Verification email sent"}),201
 
     except Exception as e:
+        print(str(e))
         return jsonify({"message":"Signup error","error":str(e)}),500
 
 
@@ -280,6 +305,7 @@ def login():
     access_token = create_access_token(
         identity=str(user["id"]),
         additional_claims={
+            "id": user["id"],
             "name": user["name"],
             "role": user["user_type"],
             "email": user["email"],
@@ -287,6 +313,7 @@ def login():
             "roll_no": user["roll_no"]
         }
     )
+    print(user["user_type"])
 
     cursor.close()
     conn.close()
@@ -300,10 +327,14 @@ def login():
 @app.route("/logout",methods=["POST"])
 def logout():
 
-    response = jsonify({"message":"Logged out"})
-    unset_jwt_cookies(response)
+    try:
 
-    return response
+        response = jsonify({"message":"Logged out"})
+        unset_jwt_cookies(response)
+    except:
+        return jsonify({"message": "Logout failed!"}) , 500
+
+    return response , 200
 
 
 @app.route("/me")
@@ -323,32 +354,9 @@ def me():
     })
 
 
-@app.route("/me/db")
-@jwt_required()
-def me_db():
 
-    user_id = int(get_jwt_identity())
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute(
-        """
-        SELECT id,name,email,roll_no,room,user_type
-        FROM users
-        WHERE id=%s
-        """,
-        (user_id,)
-    )
-
-    user = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-
-    return jsonify(user)
-
-@app.route("/announcements", methods=["GET"])
+@app.route("/get-announcements", methods=["GET"])
 @jwt_required()
 def get_announcements():
 
@@ -387,6 +395,114 @@ def get_announcements():
             "error": str(e)
         }), 500
     
+@app.route("/get-user-announcements", methods=["GET"])
+@role_required("warden", "mess")
+def get_user_announcements():
+
+    try:
+        claims = get_jwt()
+        user_id = claims["id"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                title,
+                description,
+                type,
+                duration,
+                priority,
+                datetime
+            FROM announcements
+            WHERE creator_id = %s
+            """,
+            (user_id,)
+        )
+
+        announcements = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(announcements)
+
+    except Exception as e:
+        return jsonify({
+            "message": "Failed to fetch announcements",
+            "error": str(e)
+        }), 500
+    
+@app.route("/submit-announcement", methods=["POST"])
+@role_required("warden", "mess")
+def submit_announcement():
+
+    data = request.json
+    title = data.get("title", "")
+    description = data.get("description", "")
+    duration = int(data.get("duration", 0))
+    announcement_type = data.get("announcement_type", "")
+    priority = data.get("priority", "")
+
+    if len(description) < 10 or len(description) > 300:
+        return jsonify({"message": "Description must be between 10 and 300 characters."}), 400
+
+    try:
+
+        claims = get_jwt()
+        user_id = claims["id"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO announcements
+            (creator_id, title, description, type, duration, priority)
+            VALUES (%s,%s,%s,%s,%s,%s)
+            """,
+            (user_id, title, description, announcement_type, duration, priority)
+        )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+
+        return jsonify({"message":"Announcement submitted!"}),200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Announcement could not be submitted!","error":str(e)}),500
+    
+@app.route("/delete-announcement/<int:announcement_id>", methods=["DELETE"])
+@role_required('warden', 'mess')
+def delete_announcement(announcement_id):
+
+    claims = get_jwt()
+    id = claims["id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM announcements
+        WHERE creator_id=%s AND id=%s
+        """,
+        (id, announcement_id)
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Announcement deleted"}), 200
+
 @app.route("/submit-complaint", methods=["POST"])
 @student_required
 def submit_complaint():
@@ -443,19 +559,69 @@ def get_user_complaints():
         cursor.execute(
             """
             SELECT
-                id,
-                type,
-                description,
-                priority,
-                status,
-                datetime
-            FROM complaints
-            WHERE roll_no = %s
+                c.id,
+                c.type,
+                c.description,
+                c.priority,
+                c.status,
+                c.datetime,
+                c.note,
+                u.name,
+                u.room
+            FROM complaints c
+            LEFT JOIN users u ON c.roll_no = u.roll_no
+            WHERE c.roll_no = %s
             ORDER BY
-                FIELD(priority,'high','medium','low'),
-                datetime DESC
+                FIELD(c.priority,'high','medium','low'),
+                c.datetime DESC
             """,
             (roll_no,)
+        )
+
+        complaints = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(complaints), 200
+
+    except Exception as e:
+
+        print(str(e))
+
+        return jsonify({
+            "message": "Could not fetch complaints",
+            "error": str(e)
+        }), 500
+    
+@app.route("/get-complaints", methods=["GET"])
+@warden_required
+def get_complaints():
+
+    try:
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                c.id,
+                c.type,
+                c.description,
+                c.priority,
+                c.status,
+                c.datetime,
+                c.note,
+                u.name,
+                u.roll_no,
+                u.room
+            FROM complaints c
+            LEFT JOIN users u ON c.roll_no = u.roll_no
+            ORDER BY
+                FIELD(c.priority,'high','medium','low'),
+                c.datetime DESC
+            """
         )
 
         complaints = cursor.fetchall()
@@ -520,6 +686,23 @@ def apply_for_leave():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        print(roll_no)
+
+        cursor.execute(
+            """
+            SELECT id FROM leaves
+            WHERE roll_no=%s AND status='pending'
+            """,
+            (roll_no,)
+        )
+
+        res = cursor.fetchone()
+
+        if(res):
+            cursor.close()
+            conn.close()
+            return jsonify({"message":"Pending leave application!"}),409
+
         cursor.execute(
             """
             INSERT INTO leaves
@@ -555,18 +738,68 @@ def get_user_leaves():
         cursor.execute(
             """
             SELECT
-                id,
-                description,
-                status,
-                start_date,
-                end_date,
-                applied_date
-            FROM leaves
-            WHERE roll_no = %s
+                l.id,
+                l.description,
+                l.status,
+                l.start_date,
+                l.end_date,
+                l.applied_date,
+                l.note,
+                u.name,
+                u.room
+            FROM leaves l
+            LEFT JOIN users u ON l.roll_no = u.roll_no
+            WHERE l.roll_no = %s
             ORDER BY
-                applied_date DESC
+                l.applied_date DESC
             """,
             (roll_no,)
+        )
+
+        leaves = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(leaves), 200
+
+    except Exception as e:
+
+        print(str(e))
+
+        return jsonify({
+            "message": "Could not fetch leaves",
+            "error": str(e)
+        }), 500
+    
+@app.route("/get-leaves", methods=["GET"])
+@warden_required
+def get_leaves():
+
+    try:
+
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                l.id,
+                l.description,
+                l.status,
+                l.start_date,
+                l.end_date,
+                l.applied_date,
+                l.note,
+                l.roll_no,
+                u.name,
+                u.room
+            FROM leaves l
+            LEFT JOIN users u ON l.roll_no = u.roll_no
+            ORDER BY
+                l.start_date
+            """
         )
 
         leaves = cursor.fetchall()
@@ -609,30 +842,6 @@ def cancel_leave(leave_id):
     conn.close()
 
     return jsonify({"message":"Leave cancelled"}),200
-    
-@app.route("/get-mess-menu", methods=["GET"])
-@jwt_required()
-def get_mess_menu():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor(dictionary=True)
-
-        cur.execute("""
-        SELECT * FROM mess_menu
-        ORDER BY FIELD(day,
-        'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
-        """)
-
-        r = cur.fetchall()
-
-        cur.close()
-        conn.close()
-
-        return jsonify({"success": True, "data": r})
-
-    except Exception as e:
-        print(str(e))
-        return jsonify({"success": False, "error": str(e)})
 
 @app.route("/share-mess-feedback", methods=["POST"])
 @student_required
@@ -674,16 +883,176 @@ def share_mess_feedback():
     except Exception as e:
         print(str(e))
         return jsonify({"message":"Feedback could not be submitted!","error":str(e)}),500
+    
+@app.route('/get-mess-feedback', methods=["GET"])
+@mess_required
+def get_mess_feedback():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
 
-@app.route("/meal-request", methods=["POST"])
+        cur.execute(
+            """
+            SELECT * FROM feedback
+            ORDER BY date DESC
+            """
+        )
+
+        res = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        return jsonify({"success": True, "data": res})
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"success": False, "error": str(e)})
+
+
+
+@app.route("/get-mess-menu", methods=["GET"])
+@jwt_required()
+def get_mess_menu():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        cur.execute("""
+        SELECT * FROM mess_menu
+        ORDER BY FIELD(day,
+        'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+        """)
+
+        r = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        return jsonify({"success": True, "data": r})
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"success": False, "error": str(e)})
+    
+@app.route("/update-menu-item", methods=["POST"])
+@mess_required
+def update_menu_item():
+    data = request.json
+    day = data.get("day", "")
+    meal_time = data.get("meal_time", "")
+    value = data.get("value", "")
+
+    if meal_time not in ("breakfast", "lunch", "snacks", "dinner") or not day:
+        return jsonify({"success": False, "message": "Invalid request data"}), 400
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            f"""
+            UPDATE mess_menu
+            SET {meal_time} = %s
+            WHERE day = %s
+            """,
+            (value, day)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"success": True, "message": "Menu item updated"})
+    except Exception as e:
+        print(str(e))
+        return jsonify({"success": False, "message": "Could not update menu item", "error": str(e)}), 500
+
+@app.route("/update-day-menu", methods=["POST"])
+@mess_required
+def update_day_menu():
+    data = request.json
+    day = data.get("day", "")
+    breakfast = data.get("breakfast", "")
+    lunch = data.get("lunch", "")
+    snacks = data.get("snacks", "")
+    dinner = data.get("dinner", "")
+
+    if not day:
+        return jsonify({"success": False, "message": "Invalid request data"}), 400
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE mess_menu
+            SET breakfast = %s,
+                lunch = %s,
+                snacks = %s,
+                dinner = %s
+            WHERE day = %s
+            """,
+            (breakfast, lunch, snacks, dinner, day)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"success": True, "message": "Day menu updated"})
+    except Exception as e:
+        print(str(e))
+        return jsonify({"success": False, "message": "Could not update day menu", "error": str(e)}), 500
+
+@app.route("/update-time-menu", methods=["POST"])
+@mess_required
+def update_time_menu():
+    data = request.json
+    meal_time = data.get("meal_time", "")
+    menu = data.get("menu", {})
+
+    if meal_time not in ("breakfast", "lunch", "snacks", "dinner") or not isinstance(menu, dict):
+        return jsonify({"success": False, "message": "Invalid request data"}), 400
+
+    allowed_days = [
+        'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'
+    ]
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        for day, value in menu.items():
+            if day not in allowed_days:
+                continue
+            cur.execute(
+                f"""
+                UPDATE mess_menu
+                SET {meal_time} = %s
+                WHERE day = %s
+                """,
+                (value, day)
+            )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"success": True, "message": "Time menu updated"})
+    except Exception as e:
+        print(str(e))
+        return jsonify({"success": False, "message": "Could not update time menu", "error": str(e)}), 500
+
+@app.route("/request-meal", methods=["POST"])
 @student_required
-def meal_request():
+def request_meal():
 
     data = request.json
     reason = data.get("reason", "")
     roll_no = int(data.get("roll_no", 0))
     meal_time = data.get("meal_time", "")
     day = data.get("day", "")
+    print(day)
+    date = data.get("date", "")
+    print(date)
+    reoccurring = data.get("reoccurring", False)
+    print(reoccurring)
 
     if not roll_no:
         return jsonify({"message":"Roll No. is required."}), 400
@@ -696,14 +1065,24 @@ def meal_request():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
-            INSERT INTO meal_requests
-            (roll_no, reason, day, meal_time)
-            VALUES (%s,%s,%s,%s)
-            """,
-            (roll_no, reason, day, meal_time)
-        )
+        if reoccurring == '1':
+            cursor.execute(
+                """
+                INSERT INTO meal_requests
+                (roll_no, reason, day, meal_time, reoccurring)
+                VALUES (%s,%s,%s,%s,%s)
+                """,
+                (roll_no, reason, day, meal_time, True)
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO meal_requests
+                (roll_no, reason, date, meal_time, reoccurring)
+                VALUES (%s,%s,%s,%s,%s)
+                """,
+                (roll_no, reason, date, meal_time, False)
+            ) 
 
         conn.commit()
 
@@ -731,18 +1110,69 @@ def get_user_meal_requests():
         cursor.execute(
             """
             SELECT
-                id,
-                reason,
-                status,
-                created_at,
-                meal_time,
-                day
-            FROM meal_requests
-            WHERE roll_no = %s
+                m.id,
+                m.reason,
+                m.status,
+                m.created_at,
+                m.meal_time,
+                m.day,
+                m.date,
+                m.note,
+                u.name,
+                u.room
+            FROM meal_requests m
+            LEFT JOIN users u ON m.roll_no = u.roll_no
+            WHERE m.roll_no = %s
             ORDER BY
-                created_at DESC
+                m.created_at DESC
             """,
             (roll_no,)
+        )
+
+        requests = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(requests), 200
+
+    except Exception as e:
+
+        print(str(e))
+
+        return jsonify({
+            "message": "Could not fetch requests",
+            "error": str(e)
+        }), 500
+    
+@app.route("/get-meal-requests", methods=["GET"])
+@mess_required
+def get_meal_requests():
+
+    try:
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                m.id,
+                m.reason,
+                m.status,
+                m.created_at,
+                m.meal_time,
+                m.day,
+                m.date,
+                m.note,
+                u.name,
+                u.roll_no,
+                u.room
+            FROM meal_requests m
+            LEFT JOIN users u ON m.roll_no = u.roll_no
+            ORDER BY
+                m.created_at DESC
+            """
         )
 
         requests = cursor.fetchall()
@@ -786,14 +1216,18 @@ def cancel__meal_request(request_id):
 
     return jsonify({"message": "Request cancelled"}), 200
 
-@app.route("/room-change-request", methods=["POST"])
+@app.route("/request-room-change", methods=["POST"])
 @student_required
-def room_change_request():
+def request_room_change():
 
     data = request.json
     reason = data.get("reason", "")
     roll_no = int(data.get("roll_no", 0))
     room = int(data.get("room", 0))
+    try:
+        new_room = int(data.get("new_room", 0))
+    except:
+        new_room = 0
 
     if not roll_no or not room:
         return jsonify({"message":"Roll No. and room are required."}), 400
@@ -806,20 +1240,30 @@ def room_change_request():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM room_change WHERE roll_no=%s",(roll_no,))
+        cursor.execute("SELECT id FROM room_change WHERE roll_no=%s AND status='pending'",(roll_no,))
         if cursor.fetchone():
             cursor.close()
             conn.close()
             return jsonify({"message":"User has a pending room change request!"}),409
 
-        cursor.execute(
-            """
-            INSERT INTO room_change
-            (roll_no, reason, current_room)
-            VALUES (%s,%s,%s)
-            """,
-            (roll_no, reason, room)
-        )
+        if new_room == 0:
+            cursor.execute(
+                """
+                INSERT INTO room_change
+                (roll_no, reason, current_room)
+                VALUES (%s,%s,%s)
+                """,
+                (roll_no, reason, room)
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO room_change
+                (roll_no, reason, current_room, new_room)
+                VALUES (%s,%s,%s,%s)
+                """,
+                (roll_no, reason, room, new_room)
+            )    
 
         conn.commit()
 
@@ -847,18 +1291,67 @@ def get_user_room_change_requests():
         cursor.execute(
             """
             SELECT
-                id,
-                reason,
-                status,
-                created_at,
-                current_room,
-                new_room
-            FROM room_change
-            WHERE roll_no = %s
+                r.id,
+                r.reason,
+                r.status,
+                r.created_at,
+                r.current_room,
+                r.new_room,
+                r.note,
+                u.name,
+                u.room
+            FROM room_change r
+            LEFT JOIN users u ON r.roll_no = u.roll_no
+            WHERE r.roll_no = %s
             ORDER BY
-                created_at DESC
+                r.created_at DESC
             """,
             (roll_no,)
+        )
+
+        requests = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(requests), 200
+
+    except Exception as e:
+
+        print(str(e))
+
+        return jsonify({
+            "message": "Could not fetch requests",
+            "error": str(e)
+        }), 500
+
+@app.route("/get-room-change-requests", methods=["GET"])
+@warden_required
+def get_room_change_requests():
+
+    try:
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                r.id,
+                r.reason,
+                r.status,
+                r.created_at,
+                r.current_room,
+                r.new_room,
+                r.note,
+                u.name,
+                u.roll_no,
+                u.room
+            FROM room_change r
+            LEFT JOIN users u ON r.roll_no = u.roll_no
+            ORDER BY
+                r.created_at DESC
+            """
         )
 
         requests = cursor.fetchall()
@@ -901,6 +1394,89 @@ def cancel_room_change_request(request_id):
     conn.close()
 
     return jsonify({"message": "Request cancelled"}), 200
+
+@app.route("/update-room-change-status", methods=["POST"])
+@warden_required
+def update_room_change_status():
+    data = request.json
+    id = int(data.get("id"))
+    status = data.get("status", "")
+    note = data.get("note", "")
+    new_room = int(data.get("newRoom"))
+    note.strip()
+
+    try:
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if len(note) > 0:
+            if new_room:
+                cursor.execute(
+                    """
+                    UPDATE room_change
+                    SET status = %s, note = %s, new_room = %s
+                    WHERE id = %s
+                    """,
+                    (status, note, id, new_room)
+                )
+            else:
+                cursor.execute(
+                    """
+                    UPDATE room_change
+                    SET status = %s, note = %s
+                    WHERE id = %s
+                    """,
+                    (status, note, id)
+                )
+        else:
+            if new_room:
+                cursor.execute(
+                    """
+                    UPDATE room_change
+                    SET status = %s, new_room = %s
+                    WHERE id = %s
+                    """,
+                    (status, new_room, id)
+                )
+            else:
+                cursor.execute(
+                    """
+                    UPDATE room_change
+                    SET status = %s
+                    WHERE id = %s
+                    """,
+                    (status, id)
+                )
+        if new_room:
+            cursor.execute(
+                """
+                SELECT roll_no FROM room_change WHERE id = %s
+                """,
+                (id,)
+            )
+            roll_no = cursor.fetchone()[0]
+            cursor.execute(
+                """
+                UPDATE users
+                SET room = %s
+                WHERE roll_no = %s
+                """,
+                (new_room, roll_no)
+            )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message":"Status updated!"}),200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Status could not be updated!","error":str(e)}),500
+    
+
 
 @app.route("/report-item", methods=["POST"])
 @student_required
@@ -1033,12 +1609,283 @@ def claim_found_item(request_id):
 
     return jsonify({"message": "Item marked as claimed"}), 200
 
+
+
+@app.route("/get-facility-timings")
+def get_facility_timings():
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM timings ORDER BY facility, day")
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    for r in rows:
+        if r["start_time"]:
+            r["start_time"] = str(r["start_time"])
+        if r["end_time"]:
+            r["end_time"] = str(r["end_time"])
+
+    return {
+        "success": True,
+        "data": rows
+    }
+
+@app.route("/update-facility-timing", methods=["POST"])
+@warden_required
+def update_facility_timing():
+
+    data = request.json
+    id = int(data.get("id"))
+    start_time = data.get("start_time", "")
+    end_time = data.get("end_time", "")
+    is_closed = bool(data.get("is_closed", False))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        if is_closed:
+            cursor.execute(
+                """
+                UPDATE timings
+                SET start_time = NULL, end_time = NULL, is_closed = 1
+                WHERE id = %s
+                """,
+                (id,)
+            )
+        else:
+            cursor.execute(
+                """
+                UPDATE timings
+                SET start_time = %s, end_time = %s, is_closed = 0
+                WHERE id = %s
+                """,
+                (start_time, end_time, id)
+            )
+
+        conn.commit()
+    except Exception as e:
+        print(str(e))
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({
+            "message": "Could not update timing",
+            "error": str(e)
+        }), 500
+
+    cursor.close()
+    conn.close()
+    return jsonify({"success": True, "message": "Timing updated"}), 200
+
+
+@app.route("/add-facility-timing", methods=["POST"])
+@warden_required
+def add_facility_timing():
+
+    data = request.json
+    facility = data.get("facility", "").strip()
+    schedule = data.get("schedule", {})
+
+    if not facility:
+        return jsonify({"message": "Facility name is required"}), 400
+
+    days = [
+        'Monday', 'Tuesday', 'Wednesday',
+        'Thursday', 'Friday', 'Saturday', 'Sunday'
+    ]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT 1 FROM timings WHERE facility = %s LIMIT 1",
+            (facility,)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({"message": "Facility already exists"}), 409
+
+        for day in days:
+            entry = schedule.get(day, {})
+            is_closed = bool(entry.get("is_closed", False))
+            if is_closed:
+                cursor.execute(
+                    "INSERT INTO timings (facility, day, is_closed) VALUES (%s, %s, %s)",
+                    (facility, day, True)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO timings (facility, day, start_time, end_time, is_closed) VALUES (%s, %s, %s, %s, %s)",
+                    (
+                        facility,
+                        day,
+                        entry.get("start_time", "09:00"),
+                        entry.get("end_time", "17:00"),
+                        False
+                    )
+                )
+
+        conn.commit()
+    except Exception as e:
+        print(str(e))
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "Could not add facility", "error": str(e)}), 500
+
+    cursor.close()
+    conn.close()
+    return jsonify({"success": True, "message": "Facility added"}), 200
+
+
+@app.route("/update-facility-timings", methods=["POST"])
+@warden_required
+def update_facility_timings():
+
+    data = request.json
+    facility_key = data.get("facilityKey", "").strip()
+    facility_name = data.get("facilityName", "").strip()
+    schedule = data.get("schedule", {})
+
+    if not facility_key or not facility_name:
+        return jsonify({"message": "Facility key and name are required"}), 400
+
+    days = [
+        'Monday', 'Tuesday', 'Wednesday',
+        'Thursday', 'Friday', 'Saturday', 'Sunday'
+    ]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        if facility_key != facility_name:
+            cursor.execute(
+                "SELECT 1 FROM timings WHERE facility = %s LIMIT 1",
+                (facility_name,)
+            )
+            if cursor.fetchone():
+                cursor.close()
+                conn.close()
+                return jsonify({"message": "Facility name already exists"}), 409
+
+        for day in days:
+            entry = schedule.get(day, {})
+            is_closed = bool(entry.get("is_closed", False))
+            if is_closed:
+                cursor.execute(
+                    "UPDATE timings SET facility = %s, start_time = NULL, end_time = NULL, is_closed = 1 WHERE facility = %s AND day = %s",
+                    (facility_name, facility_key, day)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE timings SET facility = %s, start_time = %s, end_time = %s, is_closed = 0 WHERE facility = %s AND day = %s",
+                    (
+                        facility_name,
+                        entry.get("start_time", "09:00"),
+                        entry.get("end_time", "17:00"),
+                        facility_key,
+                        day
+                    )
+                )
+
+            if cursor.rowcount == 0:
+                if is_closed:
+                    cursor.execute(
+                        "INSERT INTO timings (facility, day, is_closed) VALUES (%s, %s, %s)",
+                        (facility_name, day, True)
+                    )
+                else:
+                    cursor.execute(
+                        "INSERT INTO timings (facility, day, start_time, end_time, is_closed) VALUES (%s, %s, %s, %s, %s)",
+                        (
+                            facility_name,
+                            day,
+                            entry.get("start_time", "09:00"),
+                            entry.get("end_time", "17:00"),
+                            False
+                        )
+                    )
+
+        conn.commit()
+    except Exception as e:
+        print(str(e))
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "Could not update facility", "error": str(e)}), 500
+
+    cursor.close()
+    conn.close()
+    return jsonify({"success": True, "message": "Facility updated"}), 200
+
+
+@app.route("/remove-facility-timing/<facility>", methods=["DELETE"])
+@warden_required
+def remove_facility_timing(facility):
+
+    facility = facility.strip()
+    if not facility:
+        return jsonify({"message": "Facility name is required"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "DELETE FROM timings WHERE facility = %s",
+            (facility,)
+        )
+        conn.commit()
+    except Exception as e:
+        print(str(e))
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "Could not remove facility", "error": str(e)}), 500
+
+    cursor.close()
+    conn.close()
+    return jsonify({"success": True, "message": "Facility removed"}), 200
+
+
+@app.route("/me/db")
+@jwt_required()
+def me_db():
+
+    user_id = int(get_jwt_identity())
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT id,name,email,roll_no,room,user_type
+        FROM users
+        WHERE id=%s
+        """,
+        (user_id,)
+    )
+
+    user = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(user)
+
 @app.route("/get-reported-items", methods=["GET"])
 @student_required
 def get_item_reports():
 
     try:
-
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -1076,6 +1923,53 @@ def get_item_reports():
             "message": "Could not fetch reports",
             "error": str(e)
         }), 500
+
+@app.route("/update-status", methods=["POST"])
+@role_required("warden", "mess")
+def update_status():
+    data = request.json
+    table = data.get("table")
+    id = int(data.get("id"))
+    status = data.get("status", "")
+    note = data.get("note", "")
+    note.strip()
+
+    try:
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if len(note) > 0:
+            cursor.execute(
+                f"""
+                UPDATE {table}
+                SET status = %s, note = %s
+                WHERE id = %s
+                """,
+                (status, note, id)
+            )
+        else:
+            cursor.execute(
+                f"""
+                UPDATE {table}
+                SET status = %s
+                WHERE id = %s
+                """,
+                (status, id)
+            )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message":"Status updated!"}),200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Status could not be updated!","error":str(e)}),500
+    
+
 
 @app.after_request
 def refresh_expiring_jwts(response):
@@ -1142,7 +2036,7 @@ def populate_announcements():
         "Laundry service timings have been slightly modified."
     ]
 
-    types = ["general", "maintenance", "event", "notice"]
+    types = ['general','facilities','mess', 'laundry', 'timings', 'other']
 
     priorities = ["low", "medium", "high"]
 
@@ -1235,6 +2129,99 @@ def populate_mess_menu():
     except Exception as e:
         print(str(e))
         return jsonify({"success": False, "error": str(e)})
+    
+@app.route("/populate-lost-and-found")
+def populate_lost_and_found():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    data = [
+        (220101, "Black leather wallet with some cards", "Wallet", "https://images.unsplash.com/photo-1601597111158-2fceff292cdc", "2026-03-10", "9876543210", "lost"),
+        (220102, "Blue metal water bottle left near mess", "Bottle", "https://images.unsplash.com/photo-1523362628745-0c100150b504", "2026-03-10", "9123456780", "found"),
+        (220103, "Casio scientific calculator", "Calculator", "https://images.unsplash.com/photo-1587145820266-a5951ee6f620", "2026-03-11", "9988776655", "lost"),
+        (220104, "Set of keys with red keychain", "Keys", "https://images.unsplash.com/photo-1582139329536-e7284fece509", "2026-03-11", "9012345678", "found"),
+        (220105, "Grey hoodie left in study room", "Hoodie", "https://images.unsplash.com/photo-1520975922284-8b456906c813", "2026-03-12", "9090909090", "lost"),
+        (220106, "Pair of wireless earbuds in case", "Earbuds", "https://images.unsplash.com/photo-1585386959984-a41552231658", "2026-03-12", "9345678123", "found"),
+        (220107, "Spiral notebook with math notes", "Notebook", "https://images.unsplash.com/photo-1531346680769-a1d79b57de5c", "2026-03-13", "9786541230", "lost"),
+        (220108, "Black backpack found near hostel gate", "Backpack", "https://images.unsplash.com/photo-1553062407-98eeb64c6a62", "2026-03-13", "9654321876", "found"),
+        (220109, "Silver wrist watch", "Watch", "https://images.unsplash.com/photo-1519744346363-dc1b7b6f3c2d", "2026-03-14", "9234567810", "lost"),
+        (220110, "Smartphone found in mess hall", "Phone", "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9", "2026-03-14", "9345612789", "found")
+    ]
+
+    cursor.executemany(
+        """
+        INSERT INTO lost_and_found
+        (roll_no, description, item_name, image, date, contact, report_type)
+        VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """,
+        data
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"message": "10 lost & found items inserted"}
+
+@app.route("/populate-facility-timings")
+def populate_facility_timings():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    data = [
+        ("Gym","Monday","06:00","10:00",0),
+        ("Gym","Tuesday","06:00","10:00",0),
+        ("Gym","Wednesday","06:00","10:00",0),
+        ("Gym","Thursday","06:00","10:00",0),
+        ("Gym","Friday","06:00","10:00",0),
+        ("Gym","Saturday","07:00","12:00",0),
+        ("Gym","Sunday",None,None,1),
+
+        ("Mess","Monday","07:00","21:00",0),
+        ("Mess","Tuesday","07:00","21:00",0),
+        ("Mess","Wednesday","07:00","21:00",0),
+        ("Mess","Thursday","07:00","21:00",0),
+        ("Mess","Friday","07:00","21:00",0),
+        ("Mess","Saturday","07:00","21:00",0),
+        ("Mess","Sunday","07:00","21:00",0),
+
+        ("Common Room","Monday","10:00","22:00",0),
+        ("Common Room","Tuesday","10:00","22:00",0),
+        ("Common Room","Wednesday","10:00","22:00",0),
+        ("Common Room","Thursday","10:00","22:00",0),
+        ("Common Room","Friday","10:00","23:00",0),
+        ("Common Room","Saturday","10:00","23:00",0),
+        ("Common Room","Sunday","10:00","22:00",0),
+
+        ("Convenience Store","Monday","09:00","20:00",0),
+        ("Convenience Store","Tuesday","09:00","20:00",0),
+        ("Convenience Store","Wednesday","09:00","20:00",0),
+        ("Convenience Store","Thursday","09:00","20:00",0),
+        ("Convenience Store","Friday","09:00","21:00",0),
+        ("Convenience Store","Saturday","10:00","18:00",0),
+        ("Convenience Store","Sunday",None,None,1)
+    ]
+
+    cursor.executemany(
+        """
+        INSERT INTO timings
+        (facility, day, start_time, end_time, is_closed)
+        VALUES (%s,%s,%s,%s,%s)
+        """,
+        data
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"message": "Facility timings added"}
+
+@app.route("/")
+def home():
+    return jsonify({"message": "Backend is running"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0",debug=True,port=app.config['PORT'])

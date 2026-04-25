@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS complaints (
     description TEXT,
     priority ENUM('low','medium','high') DEFAULT 'medium',
     status ENUM('pending','in_progress','resolved','rejected') DEFAULT 'pending',
-    datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    note TEXT
 )
 """
 cursor.execute(create_complaints_table)
@@ -85,7 +86,8 @@ CREATE TABLE IF NOT EXISTS leaves (
     end_date DATE,
     applied_date DATE,
     description TEXT,
-    status ENUM('pending','approved','rejected') DEFAULT 'pending'
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    note TEXT
     )
 """
 cursor.execute(create_leaves_table)
@@ -110,9 +112,10 @@ print("Table 'feedback' created or already exists.")
 create_announcements_table = """
 CREATE TABLE IF NOT EXISTS announcements (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    creator_id INT,
     title VARCHAR(255),
     description TEXT,
-    type VARCHAR(100),
+    type ENUM('general','facilities','mess', 'laundry', 'timings', 'other') DEFAULT 'other',
     duration INT,
     priority ENUM('low','medium','high') DEFAULT 'medium',
     datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -179,7 +182,10 @@ CREATE TABLE IF NOT EXISTS meal_requests (
     roll_no INT,
     meal_time ENUM('breakfast','lunch','snacks','dinner'),
     status ENUM('pending','approved','rejected') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date DATE,
+    reoccurring BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    note TEXT
 )
 """
 cursor.execute(create_meal_requests_table)
@@ -195,12 +201,25 @@ CREATE TABLE IF NOT EXISTS room_change (
     new_room INT,
     roll_no INT NOT NULL,
     status ENUM('pending','approved','rejected') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    note TEXT
 )
 """
 cursor.execute(create_room_change_table)
 print("Table 'room change' created or already exists.")
 
+# ---------------- Updates History ----------------
+
+create_updates_history_table = """
+CREATE TABLE IF NOT EXISTS updates_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    table VARCHAR(255),
+    user_id INT,
+    entry_id INT,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_type ENUM('create', 'update', 'signup', 'delete')
+)
+"""
 
 conn.commit()
 cursor.close()
