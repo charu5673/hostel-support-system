@@ -22,6 +22,16 @@ import TimingsView from "../pages/warden dashboard pages/timings/TimingsView";
 import FeedbackView from "../pages/mess dashboard pages/feedback/FeedbackView";
 import MealRequestView from "../pages/mess dashboard pages/meal requests/MealRequestView";
 import MessMenuView from "../pages/mess dashboard pages/mess menu/MessMenuView";
+import EmailDomainsView from "../pages/admin dashboard pages/email domains/EmailDomainsView";
+import UsersView from "../pages/admin dashboard pages/users/UsersView";
+import ConfigurationSet from "../pages/admin dashboard pages/configurations/ConfigurationSet";
+import Overview from "../pages/admin dashboard pages/analytics/overview/Overview";
+import ComplaintsAnalytics from "../pages/admin dashboard pages/analytics/complaints/ComplaintsAnalytics";
+import LeavesAnalytics from "../pages/admin dashboard pages/analytics/leaves/LeavesAnalytics";
+import RoomChangeAnalytics from "../pages/admin dashboard pages/analytics/room change/RoomChangeAnalytics";
+import MealRequestsAnalytics from "../pages/admin dashboard pages/analytics/meal requests/MealRequestsAnalytics";
+import Settings from "../pages/settings/SettingsPage";
+import ApproveUsersView from "../pages/admin dashboard pages/approve users/ApproveUsersView";
 
 export const DashboardPages = {
   'student': [
@@ -39,7 +49,8 @@ export const DashboardPages = {
     ItemReportSubmission,
     ItemReportCheck,
     LostAndFound,
-    TimingsCheck
+    TimingsCheck,
+    Settings
   ],
   'warden': [
     DashboardDefault,
@@ -59,6 +70,17 @@ export const DashboardPages = {
     MessMenuView
   ],
   'admin': [
-    DashboardDefault
+    DashboardDefault,
+    AnnouncementSubmission,
+    AnnouncementsCheck,
+    EmailDomainsView,
+    ConfigurationSet,
+    UsersView,
+    ApproveUsersView,
+    Overview,
+    ComplaintsAnalytics,
+    LeavesAnalytics,
+    RoomChangeAnalytics,
+    MealRequestsAnalytics
   ],
 };

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     user_type ENUM('student','warden','mess','admin') NOT NULL,
     is_verified BOOLEAN DEFAULT FALSE,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
@@ -70,6 +71,7 @@ CREATE TABLE IF NOT EXISTS complaints (
     priority ENUM('low','medium','high') DEFAULT 'medium',
     status ENUM('pending','in_progress','resolved','rejected') DEFAULT 'pending',
     datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     note TEXT
 )
 """
@@ -87,6 +89,7 @@ CREATE TABLE IF NOT EXISTS leaves (
     applied_date DATE,
     description TEXT,
     status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     note TEXT
     )
 """
@@ -185,6 +188,7 @@ CREATE TABLE IF NOT EXISTS meal_requests (
     date DATE,
     reoccurring BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     note TEXT
 )
 """
@@ -192,7 +196,7 @@ cursor.execute(create_meal_requests_table)
 print("Table 'meal requests' created or already exists.")
 
 
-# ---------------- Meal Request ----------------
+# ---------------- Room Change ----------------
 create_room_change_table = """
 CREATE TABLE IF NOT EXISTS room_change (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -202,24 +206,37 @@ CREATE TABLE IF NOT EXISTS room_change (
     roll_no INT NOT NULL,
     status ENUM('pending','approved','rejected') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     note TEXT
 )
 """
 cursor.execute(create_room_change_table)
 print("Table 'room change' created or already exists.")
 
-# ---------------- Updates History ----------------
-
-create_updates_history_table = """
-CREATE TABLE IF NOT EXISTS updates_history (
+# ---------------- Limitations ----------------
+create_config_table = """
+CREATE TABLE IF NOT EXISTS system_config (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    table VARCHAR(255),
-    user_id INT,
-    entry_id INT,
-    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    action_type ENUM('create', 'update', 'signup', 'delete')
+    value TEXT,
+    config_key VARCHAR(255) UNIQUE,
+    type ENUM('int', 'boolean', 'string', 'float') DEFAULT 'string',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 """
+cursor.execute(create_config_table)
+print("Table 'system_config' created or already exists.")
+
+# ---------------- User Email Settings ----------------
+
+create_user_email_settings_table = """
+CREATE TABLE IF NOT EXISTS user_email_settings (
+    user_id INT PRIMARY KEY,
+    settings JSON,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)
+"""
+cursor.execute(create_user_email_settings_table)
+print("Table 'user_email_settings' created or already exists.")
 
 conn.commit()
 cursor.close()

@@ -100,7 +100,7 @@ function TimingsCheck() {
 
                 return(
                   <td key={dayIndex}>
-                    {dayTiming.start_time.slice(0,5)} - {dayTiming.end_time.slice(0,5)}
+                    {dayTiming.start_time.slice(4,5) == ':' ? dayTiming.start_time.slice(0,4) : dayTiming.start_time.slice(0,5)} - {dayTiming.end_time.slice(4,5) == ':' ? dayTiming.end_time.slice(0,4) : dayTiming.end_time.slice(0,5)}
                   </td>
                 )
 

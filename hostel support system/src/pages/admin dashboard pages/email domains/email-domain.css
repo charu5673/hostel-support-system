@@ -1,0 +1,292 @@
+/* Email Domains View Styles */
+
+.view_domain-outer {
+  padding: 30px;
+  height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.view_domain-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.view_domain-outer h2 {
+  color: var(--blue);
+  font-size: 28px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+/* Add Domain Button */
+.add-domain-btn {
+  margin-bottom: 20px;
+  width: 80px;
+  aspect-ratio: 4/1;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  background: var(--blue);
+  color: var(--white);
+  transition: all 0.2s ease;
+}
+
+.add-domain-btn:hover {
+  background: #1a5fb4;
+}
+
+/* Filter Row */
+.domain-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.domain-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.domain-filter-row button:hover {
+  background: #e0e0e0;
+}
+
+.domain-filter-row button.active-filter {
+  background: var(--blue);
+  color: var(--white);
+}
+
+/* Domains List */
+.domains-list {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.domains-list p {
+  color: #666;
+  font-size: 16px;
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Domain Card */
+.domain-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.domain-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.domain-header-left {
+  flex: 1;
+}
+
+.domain-header-left h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.domain-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.status-active {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-badge.status-inactive {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Domain Date */
+.domain-date {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  border: 1px solid #e0e0e0;
+}
+
+/* Domain Actions */
+.domain-card button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 8px;
+  transition: all 0.2s ease;
+}
+
+.remove-domain-button {
+  background: #e74c3c;
+  color: white;
+}
+
+.remove-domain-button:hover {
+  background: #c0392b;
+}
+
+.toggle-domain-button {
+  background: var(--blue);
+  color: white;
+}
+
+.toggle-domain-button:hover {
+  background: #1a5fb4;
+}
+
+/* Add Domain Button */
+.add-domain-btn {
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  background: var(--blue);
+  color: var(--white);
+  transition: all 0.2s ease;
+}
+
+.add-domain-btn:hover {
+  background: #1a5fb4;
+}
+
+/* Popup Modal */
+.domain-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.domain-popup {
+  background: var(--white);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.domain-popup h2 {
+  color: var(--blue);
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.domain-popup input {
+  width: 100%;
+  color: #000;
+  font-weight: 400;
+  border-radius: 15px;
+  border: 2px solid var(--blue);
+  background: none;
+  font-size: 18px;
+  padding: 12px;
+  display: block;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+.domain-popup input::placeholder {
+  color: var(--blue);
+  opacity: 0.7;
+}
+
+.domain-popup input:focus {
+  outline: none;
+  border-color: #1a5fb4;
+}
+
+.domain-popup-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.domain-popup-buttons button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.domain-popup-buttons button:nth-child(1) {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.domain-popup-buttons button:nth-child(1):hover {
+  background: #e0e0e0;
+}
+
+.domain-popup-buttons button:nth-child(2) {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.domain-popup-buttons button:nth-child(2):hover {
+  background: #1a5fb4;
+}

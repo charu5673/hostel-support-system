@@ -27,7 +27,7 @@ function MealRequestSubmission({ user }) {
     const date = e.target.date ? e.target.date.value : null;
     const reoccurring = reoccurringCheck ? '1' : '0';
   
-    const res = await loadingFetch(`${Constants.API}/meal-request`, {
+    const res = await loadingFetch(`${Constants.API}${Constants.ROUTES.REQUEST_MEAL}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

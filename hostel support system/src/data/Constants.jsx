@@ -62,6 +62,37 @@ export const Constants = {
     'REMOVE_FACILITY_TIMING': '/remove-facility-timing',
 
     // Update status
-    'UPDATE_STATUS': '/update-status'
+    'UPDATE_STATUS': '/update-status',
+
+    // Admin
+    'GET_EMAIL_DOMAINS': '/get-email-domains',
+    'ADD_EMAIL_DOMAIN': '/add-email-domain',
+    'REMOVE_EMAIL_DOMAIN': '/remove-email-domain',
+    'TOGGLE_EMAIL_DOMAIN': '/toggle-email-domain',
+    'GET_ALL_USERS': '/get-all-users',
+    'DELETE_USER': '/delete-user',
+    'ADD_USER': '/add-user',
+    'GET_USER_COMPLAINTS_BY_ROLL': '/get-user-complaints-by-roll',
+    'GET_USER_LEAVES_BY_ROLL': '/get-user-leaves-by-roll',
+    'GET_USER_MEAL_REQUESTS_BY_ROLL': '/get-user-meal-requests-by-roll',
+    'GET_USER_ROOM_CHANGE_BY_ROLL': '/get-user-room-change-by-roll',
+    'GET_USER_ITEM_REPORTS_BY_ROLL': '/get-user-item-reports-by-roll',
+    'GET_USER_FEEDBACK_BY_ROLL': '/get-user-feedback-by-roll',
+    'GET_USER_ANNOUNCEMENTS_BY_ID': '/get-user-announcements-by-id',
+    'GET_CONFIG': '/get-config',
+    'UPDATE_CONFIG': '/update-config',
+    'GET_PENDING_USERS': '/get-pending-users',
+    'UPDATE_USER_STATUS': '/update-user-status',
+
+    // Analytics
+    'ANALYTICS_OVERVIEW': '/analytics-overview',
+    'ANALYTICS_COMPLAINTS': '/analytics-complaints',
+    'ANALYTICS_LEAVES': '/analytics-leaves',
+    'ANALYTICS_ROOM_CHANGE': '/analytics-room-change',
+    'ANALYTICS_MEAL_REQUESTS': '/analytics-meal-requests',
+
+    // Email settings
+    'GET_EMAIL_SETTINGS': '/get-email-settings',
+    'UPDATE_EMAIL_SETTINGS': '/update-email-settings'
   }
 };

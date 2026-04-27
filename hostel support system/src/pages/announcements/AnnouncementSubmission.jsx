@@ -30,7 +30,7 @@ function AnnouncementSubmission({ user }) {
     showAlert(data.message, res.status == 200 ? "success" : "error");
   };
 
-  const wardenOptions = (
+  const options = (
     <select id='type' name='type'>
       <option value='general'>General</option>
       <option value='facilities'>Facilities</option>
@@ -59,9 +59,9 @@ function AnnouncementSubmission({ user }) {
         <input id="duration" name="duration" type="number"></input>
         <label htmlFor='type'>Type</label>
         {
-          user.role == 'warden' ?
-          wardenOptions :
-          messOptions
+          user.role == 'mess' ?
+          messOptions :
+          options
         }
         <label htmlFor='priority'>Priority</label>
         <select name='priority' id='priority'>

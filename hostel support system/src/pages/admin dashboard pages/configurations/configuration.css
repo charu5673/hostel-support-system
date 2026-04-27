@@ -1,0 +1,215 @@
+/* Configuration View Styles */
+
+.view_config-outer {
+  padding: 30px;
+  height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.view_config-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  text-align: left;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.view_config-outer h2 {
+  color: var(--blue);
+  font-size: 28px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+/* Configs List */
+.configs-list {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.configs-list p {
+  color: #666;
+  font-size: 16px;
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Config Card */
+.config-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.config-header-left {
+  flex: 1;
+}
+
+.config-header-left h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.config-type {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.config-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Config Date */
+.config-date {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Config Value Section */
+.config-value-section {
+  margin-top: 10px;
+}
+
+/* Display Section */
+.config-display-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.config-value {
+  background: #f8f8f8;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  flex: 1;
+  word-break: break-all;
+}
+
+.config-value.boolean-true {
+  background: #d4edda;
+  color: #155724;
+}
+
+.config-value.boolean-false {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Edit Button */
+.config-edit-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--blue);
+  color: var(--white);
+  transition: all 0.2s ease;
+  margin-left: 10px;
+}
+
+.config-edit-btn:hover {
+  background: #1a5fb4;
+}
+
+/* Edit Section */
+.config-edit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.config-input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.config-input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.config-select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  cursor: pointer;
+}
+
+.config-select:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+/* Edit Buttons */
+.config-edit-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.config-save-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background: #28a745;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.config-save-btn:hover {
+  background: #218838;
+}
+
+.config-cancel-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background: #6c757d;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.config-cancel-btn:hover {
+  background: #5a6268;
+}

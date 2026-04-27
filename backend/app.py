@@ -10,6 +10,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import random
 from datetime import datetime, timedelta, timezone, date
+import json
+
+from flask_mail import Message
+import threading
 
 
 from flask_jwt_extended import (
@@ -74,9 +78,31 @@ def role_required(*roles):
 
             claims = get_jwt()
             user_role = claims.get("role")
+            user_id = claims.get("id")
 
             if user_role not in roles:
                 return jsonify({"message": "Access forbidden"}), 403
+
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor(dictionary=True)
+
+                cursor.execute(
+                    "SELECT status FROM users WHERE id = %s",
+                    (user_id,)
+                )
+
+                row = cursor.fetchone()
+
+                cursor.close()
+                conn.close()
+
+                if not row or row["status"] != "approved":
+                    return jsonify({"message": "Account not approved"}), 403
+
+            except Exception as e:
+                print("Auth check error:", str(e))
+                return jsonify({"message": "Authorization failed"}), 500
 
             return fn(*args, **kwargs)
 
@@ -127,26 +153,578 @@ def is_email_allowed(email, allowed_domains):
         return domain in allowed_domains
     except IndexError:
         return False
-    
-def add_to_updates_history(table, user_id, entry_id, action):
+
+@app.route("/get-email-domains", methods=["GET"])
+@admin_required
+def get_email_domains():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        "SELECT id, domain, is_active, created_at FROM email_policies"
+    )
+
+    domains = cursor.fetchall()
+
+    return jsonify(domains)
+
+@app.route("/add-email-domain", methods=["POST"])
+@admin_required
+def add_email_domain():
+
+    data = request.json
+    domain = data.get("domain", "").strip()
+
+    if not domain:
+        return jsonify({"message":"Domain name required"}),400
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute(
             """
-            INSERT INTO updates_history
-            (table, user_id, entry_id, action_type)
-            VALUES (%s, %s, %s, %s)
+            SELECT id FROM email_policies WHERE domain=%s
             """,
-            (table, user_id, entry_id, action)
+            (domain,)
         )
+
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({"message":"Domain already exists!"}),500
+
+        cursor.execute(
+            """
+            INSERT INTO email_policies (domain, is_active) VALUES (%s, 1)
+            """,
+            (domain,)
+        )
+
         conn.commit()
         cursor.close()
         conn.close()
+
+        return jsonify({"message":"Domain added!"}),200
     except Exception as e:
         print(str(e))
+        return jsonify({"message":"Domain could not be added"}),500
 
+@app.route("/remove-email-domain", methods=["DELETE"])
+@admin_required
+def remove_email_domain():
+
+    data = request.json
+    id = int(data.get("id", ""))
+
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            DELETE FROM email_policies WHERE id=%s
+            """,
+            (id,)
+        )
+
+        conn.commit()
+
+        return jsonify({"message":"Domain removed!"}),200
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Domain could not be removed"}),500
+
+@app.route("/toggle-email-domain", methods=["POST"])
+@admin_required
+def toggle_email_domain():
+
+    data = request.json
+    id = int(data.get("id", ""))
+    is_active = bool(data.get("is_active", False))
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE email_policies
+            SET is_active = %s
+            WHERE id = %s
+            """,
+            (is_active, id)
+        )
+        
+        conn.commit()
+
+        return jsonify({"message":"Domain toggled!"}),200
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Domain could not be toggled"}),500
+
+def can_send_email(settings, category, sub=None):
+
+    if category not in settings:
+        return False
+
+    if isinstance(settings[category], dict):
+        if sub is None:
+            return False
+        return settings[category].get(sub, False)
+
+    return settings.get(category, False)
+
+def get_user_settings(user_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT settings FROM user_email_settings WHERE user_id=%s",
+        (user_id,)
+    )
+
+    row = cursor.fetchone()
+
+    if row and row["settings"]:
+        return json.loads(row["settings"])
+
+    return None
+
+def get_user_email(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            "SELECT email FROM users WHERE id = %s",
+            (user_id,)
+        )
+
+        row = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if row and row["email"]:
+            return row["email"]
+
+        return None
+
+    except Exception as e:
+        print("get_user_email error:", str(e))
+        return None
+
+def get_admin_emails():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT email FROM users WHERE role = 'admin'"
+        )
+
+        emails = [row[0] for row in cursor.fetchall()]
+
+        cursor.close()
+        conn.close()
+
+        return emails
+
+    except Exception as e:
+        print("get_admin_emails error:", str(e))
+        return []
+
+def _send_async(app, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print("Email send error:", str(e))
+
+
+def send_email(to, subject, body, html=None):
+    try:
+        msg = Message(
+            subject=subject,
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[to]
+        )
+
+        if html:
+            msg.html = html
+        else:
+            msg.body = body
+
+        threading.Thread(target=_send_async, args=(app, msg)).start()
+
+    except Exception as e:
+        print("send_email error:", str(e))
+
+# ---------------- ADMIN USER MANAGEMENT ----------------
+
+@app.route("/get-all-users", methods=["GET"])
+@admin_required
+def get_all_users():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, email, name, room, roll_no, user_type, is_verified, created_at
+            FROM users
+            ORDER BY created_at DESC
+            """
+        )
+        
+        users = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(users)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch users"}), 500
+
+@app.route("/delete-user/<int:user_id>", methods=["DELETE"])
+@admin_required
+def delete_user(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"message": "User deleted successfully"}), 200
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to delete user"}), 500
+
+@app.route("/add-user", methods=["POST"])
+@admin_required
+def add_user():
+    data = request.json
+    email = data.get("email", "").strip()
+    name = data.get("name", email).strip()
+    password = data.get("password", "").strip()
+    user_type = data.get("user_type", "student")
+    room = int(data.get("room", 0)) if data.get("room") else None
+    roll_no = int(data.get("roll_no", 0)) if data.get("roll_no") else None
+    
+    if not email or not password:
+        return jsonify({"message": "Email and password required"}), 400
+    
+    if user_type == "student" and (not room or not roll_no):
+        return jsonify({"message": "Room and roll number required for students"}), 400
+    
+    password_hash = generate_password_hash(password)
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({"message": "User already exists"}), 409
+        
+        if user_type == "student":
+            cursor.execute(
+                """
+                INSERT INTO users (name, email, password, is_verified, user_type, room, roll_no)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (name, email, password_hash, True, user_type, room, roll_no)
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO users (name, email, password, is_verified, user_type)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (name, email, password_hash, True, user_type)
+            )
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"message": "User added successfully"}), 201
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to add user", "error": str(e)}), 500
+
+# Get user complaints
+@app.route("/get-user-complaints-by-roll/<int:roll_no>", methods=["GET"])
+@admin_required
+def get_user_complaints_by_roll(roll_no):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, type, description, priority, status, datetime, note
+            FROM complaints
+            WHERE roll_no = %s
+            ORDER BY datetime DESC
+            """,
+            (roll_no,)
+        )
+        
+        complaints = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(complaints)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch complaints"}), 500
+
+# Get user leaves
+@app.route("/get-user-leaves-by-roll/<int:roll_no>", methods=["GET"])
+@admin_required
+def get_user_leaves_by_roll(roll_no):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, start_date, end_date, applied_date, description, status, note
+            FROM leaves
+            WHERE roll_no = %s
+            ORDER BY applied_date DESC
+            """,
+            (roll_no,)
+        )
+        
+        leaves = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(leaves)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch leaves"}), 500
+
+# Get user meal requests
+@app.route("/get-user-meal-requests-by-roll/<int:roll_no>", methods=["GET"])
+@admin_required
+def get_user_meal_requests_by_roll(roll_no):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, reason, day, meal_time, status, date, reoccurring, note
+            FROM meal_requests
+            WHERE roll_no = %s
+            ORDER BY created_at DESC
+            """,
+            (roll_no,)
+        )
+        
+        requests = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(requests)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch meal requests"}), 500
+
+# Get user room change requests
+@app.route("/get-user-room-change-by-roll/<int:roll_no>", methods=["GET"])
+@admin_required
+def get_user_room_change_by_roll(roll_no):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, reason, current_room, requested_room, status, note, applied_date
+            FROM room_change
+            WHERE roll_no = %s
+            ORDER BY applied_date DESC
+            """,
+            (roll_no,)
+        )
+        
+        requests = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(requests)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch room change requests"}), 500
+
+# Get user item reports (lost and found)
+@app.route("/get-user-item-reports-by-roll/<int:roll_no>", methods=["GET"])
+@admin_required
+def get_user_item_reports_by_roll(roll_no):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, item_name, description, report_type, status, date
+            FROM lost_and_found
+            WHERE roll_no = %s
+            ORDER BY date DESC
+            """,
+            (roll_no,)
+        )
+        
+        reports = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(reports)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch item reports"}), 500
+
+# Get user feedback
+@app.route("/get-user-feedback-by-roll/<int:roll_no>", methods=["GET"])
+@admin_required
+def get_user_feedback_by_roll(roll_no):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, meal_time, description, date
+            FROM feedback
+            WHERE roll_no = %s
+            ORDER BY date DESC
+            """,
+            (roll_no,)
+        )
+        
+        feedback = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(feedback)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch feedback"}), 500
+
+# Get user announcements (for warden/mess)
+@app.route("/get-user-announcements-by-id/<int:user_id>", methods=["GET"])
+@admin_required
+def get_user_announcements_by_id(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute(
+            """
+            SELECT id, title, description, type, duration, priority, datetime
+            FROM announcements
+            WHERE creator_id = %s
+            ORDER BY datetime DESC
+            """,
+            (user_id,)
+        )
+        
+        announcements = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(announcements)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed to fetch announcements"}), 500
+
+@app.route('/get-config', methods=["GET"])
+@admin_required
+def get_config():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT config_key, value, created_at, type FROM system_config
+            """
+        )
+
+        configs = cursor.fetchall()
+
+        return jsonify(configs)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Could not fetch configurations!"})
+
+
+@app.route('/update-config', methods=["POST"])
+@admin_required
+def update_config():
+    data = request.json
+    key = data.get("key", "").strip()
+    value = data.get("value", "")
+    config_type = data.get("type", "string")
+
+    if not key:
+        return jsonify({"message": "Key is required"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if key exists
+        cursor.execute(
+            """
+            SELECT id FROM system_config
+            WHERE config_key = %s 
+            """,
+            (key,)
+        )
+
+        existing = cursor.fetchone()
+
+        if existing:
+            # Update existing
+            cursor.execute(
+                """
+                UPDATE system_config
+                SET value = %s
+                WHERE config_key = %s
+                """,
+                (value, key)
+            )
+        else:
+            # Insert new
+            cursor.execute(
+                """
+                INSERT INTO system_config (config_key, value, type)
+                VALUES (%s, %s, %s)
+                """,
+                (key, value, config_type)
+            )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Configuration updated!"})
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Configuration could not be updated!"})
 
 @app.route("/signup", methods=["POST"])
 def signup():
@@ -188,15 +766,20 @@ def signup():
             conn.close()
             return jsonify({"message":"User already exists"}),409
 
+        if user_type in ["warden", "mess"]:
+            status = "pending"
+        else:
+            status = "approved"
+
         if user_type == "student":
 
             cursor.execute(
                 """
                 INSERT INTO users
-                (name,email,password,is_verified,user_type,room,roll_no)
+                (name,email,password,is_verified,user_type,room,roll_no,status)
                 VALUES (%s,%s,%s,%s,%s,%s,%s)
                 """,
-                (name,email,password_hash,False,user_type,room,roll_no)
+                (name,email,password_hash,False,user_type,room,roll_no,status)
             )
 
         else:
@@ -204,10 +787,10 @@ def signup():
             cursor.execute(
                 """
                 INSERT INTO users
-                (name,email,password,is_verified,user_type)
+                (name,email,password,is_verified,user_type, status)
                 VALUES (%s,%s,%s,%s,%s)
                 """,
-                (name,email,password_hash,False,user_type)
+                (name,email,password_hash,False,user_type, status)
             )
 
         conn.commit()
@@ -231,19 +814,27 @@ def signup():
 
         mail.send(msg)
 
-        cursor.execute(
-            """
-            SELECT id FROM users
-            WHERE email=%s
-            """,
-            (email,)
-        )
-        user_id = cursor.fetchone()
+
+        if user_type in ["warden", "mess"]:
+
+            admin_emails = get_admin_emails()
+
+            subject = "New Account Approval Required"
+
+            body = f"""
+        A new {user_type} account has been registered and requires approval.
+
+        Name: {name}
+        Email: {email}
+
+        Please review and approve/reject from the admin dashboard.
+        """
+
+            for admin_email in admin_emails:
+                send_email(admin_email, subject, body)
 
         cursor.close()
         conn.close()
-
-        add_to_updates_history('signup', user_id, user_id, 'signup')
 
         return jsonify({"message":"Verification email sent"}),201
 
@@ -301,6 +892,16 @@ def login():
 
     if not check_password_hash(user["password"],password):
         return jsonify({"message":"Invalid credentials"}),401
+    
+    if user["status"] == "pending":
+        return jsonify({
+            "message": "Account pending admin approval"
+        }), 403
+    
+    if user["status"] == "rejected":
+        return jsonify({
+            "message": "Your account was rejected by the admin!"
+        }), 403
 
     access_token = create_access_token(
         identity=str(user["id"]),
@@ -396,7 +997,7 @@ def get_announcements():
         }), 500
     
 @app.route("/get-user-announcements", methods=["GET"])
-@role_required("warden", "mess")
+@role_required("warden", "mess", "admin")
 def get_user_announcements():
 
     try:
@@ -436,7 +1037,7 @@ def get_user_announcements():
         }), 500
     
 @app.route("/submit-announcement", methods=["POST"])
-@role_required("warden", "mess")
+@role_required("warden", "mess", "admin")
 def submit_announcement():
 
     data = request.json
@@ -468,6 +1069,18 @@ def submit_announcement():
 
         conn.commit()
 
+        cursor.execute("SELECT id, email FROM users")
+        users = cursor.fetchall()
+
+        for u in users:
+            settings = get_user_settings(u[0])
+            if settings and can_send_email(settings, "announcements", priority):
+                send_email(
+                    u[1],
+                    title,
+                    description
+                )
+
         cursor.close()
         conn.close()
 
@@ -479,7 +1092,7 @@ def submit_announcement():
         return jsonify({"message":"Announcement could not be submitted!","error":str(e)}),500
     
 @app.route("/delete-announcement/<int:announcement_id>", methods=["DELETE"])
-@role_required('warden', 'mess')
+@role_required('warden', 'mess', 'admin')
 def delete_announcement(announcement_id):
 
     claims = get_jwt()
@@ -680,13 +1293,40 @@ def apply_for_leave():
 
     if len(description) < 10 or len(description) > 300:
         return jsonify({"message": "Description must be between 10 and 300 characters."}), 400
+    
 
     try:
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        print(roll_no)
+        cursor.execute(
+            """
+            SELECT value FROM system_config
+            WHERE config_key = 'max_leave_days'
+            """
+        )
+
+        max_duration = int(cursor.fetchone()[0])
+
+        if abs(datetime.strptime(start_date, "%Y-%m-%d").date() - datetime.strptime(end_date, "%Y-%m-%d").date()).days > max_duration:
+            cursor.close()
+            conn.close()
+            return jsonify({"message": f"Leave duration cannot be longer than {max_duration} days!"}), 201
+
+        cursor.execute(
+            """
+            SELECT value FROM system_config
+            WHERE config_key = 'min_leave_notice'
+            """
+        )
+
+        notice = int(cursor.fetchone()[0])
+
+        if abs(datetime.strptime(start_date, "%Y-%m-%d").date() - date.today()).days < notice:
+            cursor.close()
+            conn.close()
+            return jsonify({"message": f"{notice} days of notice is required!"}), 201
 
         cursor.execute(
             """
@@ -949,22 +1589,30 @@ def update_menu_item():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+
         cur.execute(
-            f"""
-            UPDATE mess_menu
-            SET {meal_time} = %s
-            WHERE day = %s
-            """,
+            f"UPDATE mess_menu SET {meal_time} = %s WHERE day = %s",
             (value, day)
         )
+
         conn.commit()
+
+        cur.execute("SELECT id, email FROM users")
+        users = cur.fetchall()
+
+        for u in users:
+            settings = get_user_settings(u[0])
+            if settings and can_send_email(settings, "menu"):
+                send_email(u[1], "Menu Updated", f"{day} {meal_time} updated to {value}")
+
         cur.close()
         conn.close()
 
         return jsonify({"success": True, "message": "Menu item updated"})
+
     except Exception as e:
         print(str(e))
-        return jsonify({"success": False, "message": "Could not update menu item", "error": str(e)}), 500
+        return jsonify({"success": False, "message": "Could not update menu item"}), 500
 
 @app.route("/update-day-menu", methods=["POST"])
 @mess_required
@@ -994,6 +1642,15 @@ def update_day_menu():
             (breakfast, lunch, snacks, dinner, day)
         )
         conn.commit()
+
+        cur.execute("SELECT id, email FROM users")
+        users = cur.fetchall()
+
+        for u in users:
+            settings = get_user_settings(u[0])
+            if settings and can_send_email(settings, "menu"):
+                send_email(u[1], "Menu Updated", f"{day} full menu updated")
+
         cur.close()
         conn.close()
 
@@ -1031,6 +1688,15 @@ def update_time_menu():
                 (value, day)
             )
         conn.commit()
+
+        cur.execute("SELECT id, email FROM users")
+        users = cur.fetchall()
+
+        for u in users:
+            settings = get_user_settings(u[0])
+            if settings and can_send_email(settings, "menu"):
+                send_email(u[1], "Menu Updated", f"{meal_time} updated for multiple days")
+
         cur.close()
         conn.close()
 
@@ -1048,11 +1714,8 @@ def request_meal():
     roll_no = int(data.get("roll_no", 0))
     meal_time = data.get("meal_time", "")
     day = data.get("day", "")
-    print(day)
     date = data.get("date", "")
-    print(date)
     reoccurring = data.get("reoccurring", False)
-    print(reoccurring)
 
     if not roll_no:
         return jsonify({"message":"Roll No. is required."}), 400
@@ -1064,6 +1727,30 @@ def request_meal():
 
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT value FROM system_config
+            WHERE config_key = 'max_active_meal_requests'
+            """
+        )
+
+        max_requests = int(cursor.fetchone()[0])
+
+        cursor.execute(
+            """
+            SELECT count(*) FROM meal_requests
+            WHERE roll_no = %s AND status = 'pending'
+            """,
+            (roll_no,)
+        )
+
+        count = int(cursor.fetchone()[0])
+
+        if count >= max_requests:
+            cursor.close()
+            conn.close()
+            return jsonify({"message": f"Only {max_requests} requests at a time are allowed!"}), 201
 
         if reoccurring == '1':
             cursor.execute(
@@ -1239,6 +1926,21 @@ def request_room_change():
 
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT value FROM system_config
+            WHERE config_key = 'allow_room_change_requests'
+            """
+        )
+
+        allow = int(cursor.fetchone()[0])
+
+        if not allow:
+            cursor.close()
+            conn.close()
+            return jsonify({"message": "Room change requests are currently not allowed!"}), 201
+
 
         cursor.execute("SELECT id FROM room_change WHERE roll_no=%s AND status='pending'",(roll_no,))
         if cursor.fetchone():
@@ -1418,7 +2120,7 @@ def update_room_change_status():
                     SET status = %s, note = %s, new_room = %s
                     WHERE id = %s
                     """,
-                    (status, note, id, new_room)
+                    (status, note, new_room, id)
                 )
             else:
                 cursor.execute(
@@ -1466,6 +2168,24 @@ def update_room_change_status():
             )
 
         conn.commit()
+
+        cursor.execute("""
+            SELECT u.id, u.email 
+            FROM users u
+            JOIN room_change r ON u.roll_no = r.roll_no
+            WHERE r.id = %s
+        """, (id,))
+
+        user = cursor.fetchone()
+
+        if user:
+            settings = get_user_settings(user[0])
+            if settings and can_send_email(settings, "requests"):
+                send_email(
+                    user[1],
+                    "Room Change Update",
+                    f"Your room change request has been {status}"
+                )
 
         cursor.close()
         conn.close()
@@ -1668,6 +2388,15 @@ def update_facility_timing():
             )
 
         conn.commit()
+
+        cursor.execute("SELECT id, email FROM users")
+        users = cursor.fetchall()
+
+        for u in users:
+            settings = get_user_settings(u[0])
+            if settings and can_send_email(settings, "facility_timings"):
+                send_email(u[1], "Facility Timing Updated", "Facility timings have changed")
+
     except Exception as e:
         print(str(e))
         conn.rollback()
@@ -1960,8 +2689,24 @@ def update_status():
 
         conn.commit()
 
+        cursor.execute(f"SELECT roll_no FROM {table} WHERE id = %s", (id,))
+        roll_no = cursor.fetchone()[0]
+
+        cursor.execute("SELECT id, email FROM users WHERE roll_no = %s", (roll_no,))
+        user = cursor.fetchone()
+
+        if user:
+            settings = get_user_settings(user[0])
+            if settings and can_send_email(settings, "requests"):
+                send_email(
+                    user[1],
+                    "Request Status Updated",
+                    f"Your {table} request is now {status}"
+                )
+
         cursor.close()
         conn.close()
+
 
         return jsonify({"message":"Status updated!"}),200
 
@@ -1969,26 +2714,136 @@ def update_status():
         print(str(e))
         return jsonify({"message":"Status could not be updated!","error":str(e)}),500
     
+@app.route("/get-email-settings", methods=["GET"])
+@jwt_required()
+def get_email_settings():
 
+    default_settings = {
+        "menu": True,
+        "requests": True,
+        "announcements": {
+            "high": True,
+            "medium": True,
+            "low": False
+        },
+        "facility_timings": False
+    }
+
+    try:
+        user_id = int(get_jwt_identity())
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            "SELECT settings FROM user_email_settings WHERE user_id = %s",
+            (user_id,)
+        )
+
+        row = cursor.fetchone()
+
+        if row and row["settings"]:
+            return jsonify(json.loads(row["settings"]))
+
+        cursor.execute(
+            "INSERT INTO user_email_settings (user_id, settings) VALUES (%s, %s)",
+            (user_id, json.dumps(default_settings))
+        )
+        conn.commit()
+
+        return jsonify(default_settings)
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Could not fetch settings!"}), 500
+
+@app.route("/update-email-settings", methods=["POST"])
+@jwt_required()
+def update_email_settings():
+
+    data = request.get_json()
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        user_id = int(get_jwt_identity())
+
+        cursor.execute(
+            """
+            INSERT INTO user_email_settings (user_id, settings)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE settings = VALUES(settings)
+            """,
+            (user_id, json.dumps(data))
+        )
+
+        conn.commit()
+
+        return jsonify({"message": "Settings updated!"}), 200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Could not update settings!"}), 500
+
+@app.route("/get-pending-users", methods=["GET"])
+@admin_required
+def get_pending_users():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id, name, email, user_type, status, created_at FROM users WHERE status = 'pending'"
+    )
+    return jsonify(cursor.fetchall())
+
+@app.route("/update-user-status", methods=["POST"])
+@admin_required
+def update_user_status():
+
+    data = request.json
+    user_id = data.get("user_id")
+    status = data.get("status")
+
+    if status not in ["approved", "rejected"]:
+        return jsonify({"message": "Invalid status"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE users SET status = %s WHERE id = %s",
+        (status, user_id)
+    )
+
+    conn.commit()
+
+    email = get_user_email(user_id)
+
+    if email:
+        send_email(
+            email,
+            "Account Status Update",
+            f"Your account has been {status}"
+        )
+
+    return jsonify({"message": "User updated"})
 
 @app.after_request
 def refresh_expiring_jwts(response):
+    if request.path == "/logout":
+        return response
     try:
         verify_jwt_in_request(optional=True)
 
-        exp_timestamp = get_jwt()["exp"]
+        claims = get_jwt()
+        exp_timestamp = claims["exp"]
         now = datetime.now(timezone.utc)
-
         target_timestamp = datetime.timestamp(now + timedelta(minutes=15))
 
         if target_timestamp > exp_timestamp:
-
-            identity = get_jwt_identity()
-
-            claims = get_jwt()
             new_token = create_access_token(
-                identity=identity,
+                identity=get_jwt_identity(),
                 additional_claims={
+                    "id": claims["id"],        # ← fix 1
                     "name": claims["name"],
                     "role": claims["role"],
                     "email": claims["email"],
@@ -1996,7 +2851,6 @@ def refresh_expiring_jwts(response):
                     "roll_no": claims["roll_no"]
                 }
             )
-
             set_access_cookies(response, new_token)
 
     except (RuntimeError, KeyError, ExpiredSignatureError):
@@ -2004,6 +2858,236 @@ def refresh_expiring_jwts(response):
 
     return response
 
+def generate_bursty_date():
+    """Generates dates with artificial peaks for certain days and hours."""
+    now = datetime.now()
+    chance = random.random()
+    
+    # 1. Create bursty days/months (Peaks and Valleys)
+    if chance < 0.15:
+        # 15% of requests clustered in a single busy week recently
+        base_date = now - timedelta(days=10 + random.randint(0, 3))
+    elif chance < 0.30:
+        # 15% clustered around mid-terms/finals period (e.g., ~150 days ago)
+        base_date = now - timedelta(days=150 + random.randint(0, 5))
+    elif chance < 0.45:
+        # 15% clustered over a year ago
+        base_date = now - timedelta(days=400 + random.randint(0, 10))
+    else:
+        # 55% spread randomly over the last 3 years (1095 days)
+        base_date = now - timedelta(days=random.randint(0, 1095))
+        
+    # 2. Create bursty hours (e.g., lots of requests at 9 AM, 2 PM, and 10 PM)
+    hour_chance = random.random()
+    if hour_chance < 0.25:
+        hour = 22  # 10 PM peak
+    elif hour_chance < 0.50:
+        hour = 9   # 9 AM peak
+    elif hour_chance < 0.70:
+        hour = 14  # 2 PM peak
+    else:
+        hour = random.randint(0, 23) # Random hour
+        
+    return base_date.replace(hour=hour, minute=random.randint(0, 59), second=random.randint(0, 59))
+
+
+@app.route("/dev/populate/complaints")
+def dev_populate_complaints():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        roll_nos = [3445678, 12345678]
+        complaint_types = ["room", "washroom", "cleaning", "laundry", "gym", "other"]
+        priorities = ["low", "medium", "high"]
+        statuses = ["pending", "in_progress", "resolved", "rejected"]
+
+        cur.execute("DELETE FROM complaints")
+
+        for i in range(400): # Increased to 400
+            created_dt = generate_bursty_date()
+            
+            # Weighted statuses: mostly resolved/rejected for older dates, higher chance of pending for recent
+            is_recent = (datetime.now() - created_dt).days < 14
+            if is_recent:
+                status = random.choices(statuses, weights=[40, 30, 20, 10])[0]
+            else:
+                status = random.choices(statuses, weights=[5, 5, 70, 20])[0]
+
+            # Determine updated_at
+            if status in ['resolved', 'rejected']:
+                # Resolved between 1 and 5 days after creation
+                updated_dt = created_dt + timedelta(days=random.randint(1, 5), hours=random.randint(1, 12))
+                # Cap it at current time if it generated a future date
+                updated_dt = min(updated_dt, datetime.now())
+                updated_str = updated_dt.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                updated_str = None
+
+            cur.execute(
+                """
+                INSERT INTO complaints
+                (roll_no, room, type, description, priority, status, datetime, updated_at, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    random.choice(roll_nos),
+                    random.randint(100, 499), # More room variation
+                    random.choice(complaint_types),
+                    f"Test complaint {i} detailing the issue.",
+                    random.choice(priorities),
+                    status,
+                    created_dt.strftime('%Y-%m-%d %H:%M:%S'),
+                    updated_str,
+                    "dev note" if random.random() > 0.7 else None
+                )
+            )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Complaints populated with 400 varied records"}), 200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed"}), 500
+
+
+@app.route("/dev/populate/leaves")
+def dev_populate_leaves():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        roll_nos = [3445678, 12345678]
+        statuses = ["pending", "approved", "rejected"]
+
+        cur.execute("DELETE FROM leaves")
+
+        for i in range(250): # Increased to 250
+            applied_dt = generate_bursty_date()
+            # Start date is usually 1 to 14 days after applied date
+            start_dt = applied_dt + timedelta(days=random.randint(1, 14))
+            # Duration is between 1 and 7 days
+            end_dt = start_dt + timedelta(days=random.randint(1, 7))
+            
+            # Weighted statuses
+            status = random.choices(statuses, weights=[15, 70, 15])[0]
+
+            cur.execute(
+                """
+                INSERT INTO leaves
+                (roll_no, start_date, end_date, applied_date, description, status, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    random.choice(roll_nos),
+                    start_dt.strftime('%Y-%m-%d'),
+                    end_dt.strftime('%Y-%m-%d'),
+                    applied_dt.strftime('%Y-%m-%d %H:%M:%S'),
+                    f"Leave reason generated {i}",
+                    status,
+                    "Leave admin note" if random.random() > 0.8 else None
+                )
+            )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Leaves populated with 250 varied records"}), 200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed"}), 500
+
+
+@app.route("/dev/populate/meals")
+def dev_populate_meals():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        roll_nos = [3445678, 12345678]
+        meals = ['breakfast', 'lunch', 'snacks', 'dinner']
+        statuses = ["pending", "approved", "rejected"]
+
+        cur.execute("DELETE FROM meal_requests")
+
+        for i in range(350): # Increased to 350
+            created_dt = generate_bursty_date()
+            # Meal is usually requested for 1-3 days in advance
+            meal_dt = created_dt + timedelta(days=random.randint(1, 3))
+            day_of_week = meal_dt.strftime('%A')
+            
+            status = random.choices(statuses, weights=[20, 60, 20])[0]
+
+            cur.execute(
+                """
+                INSERT INTO meal_requests
+                (reason, day, roll_no, meal_time, status, date, reoccurring, created_at, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    f"Meal request {i} reasoning",
+                    day_of_week,
+                    random.choice(roll_nos),
+                    random.choice(meals),
+                    status,
+                    meal_dt.strftime('%Y-%m-%d'),
+                    random.choice([True, False]), # Randomize reoccurring boolean
+                    created_dt.strftime('%Y-%m-%d %H:%M:%S'),
+                    "Dietary note" if random.random() > 0.75 else None
+                )
+            )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Meal requests populated with 350 varied records"}), 200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed"}), 500
+
+
+@app.route("/dev/populate/room-change")
+def dev_populate_room_change():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        roll_nos = [3445678, 12345678]
+        statuses = ["pending", "approved", "rejected"]
+
+        cur.execute("DELETE FROM room_change")
+
+        for i in range(150): # Increased to 150
+            created_dt = generate_bursty_date()
+            current_room = random.randint(100, 399)
+            new_room = random.randint(100, 399) if random.random() > 0.5 else None
+            status = random.choices(statuses, weights=[30, 40, 30])[0]
+
+            cur.execute(
+                """
+                INSERT INTO room_change
+                (reason, current_room, new_room, roll_no, status, created_at, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    f"Room change requested {i}",
+                    current_room,
+                    new_room,
+                    random.choice(roll_nos),
+                    status,
+                    created_dt.strftime('%Y-%m-%d %H:%M:%S'),
+                    "Wants better view" if random.random() > 0.8 else None
+                )
+            )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Room change populated with 150 varied records"}), 200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message": "Failed"}), 500
 
 @app.route("/populate-announcements")
 def populate_announcements():
@@ -2218,6 +3302,351 @@ def populate_facility_timings():
     conn.close()
 
     return {"message": "Facility timings added"}
+
+# ==================== ANALYTICS ENDPOINTS ====================
+
+@app.route("/analytics-overview", methods=["GET"])
+@admin_required
+def analytics_overview():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT COUNT(*) as c FROM users WHERE user_type='student'")
+        total_students = cursor.fetchone()["c"]
+
+        cursor.execute("SELECT COUNT(*) as c FROM users WHERE user_type='warden'")
+        total_wardens = cursor.fetchone()["c"]
+
+        cursor.execute("SELECT COUNT(*) as c FROM users WHERE user_type='mess'")
+        total_mess = cursor.fetchone()["c"]
+
+        cursor.execute("""
+            SELECT COUNT(*) as c 
+            FROM complaints 
+            WHERE status IN ('pending','in_progress')
+        """)
+        active_complaints = cursor.fetchone()["c"]
+
+        cursor.execute("SELECT COUNT(*) as c FROM leaves WHERE status='pending'")
+        pending_leaves = cursor.fetchone()["c"]
+
+        cursor.execute("SELECT COUNT(*) as c FROM meal_requests WHERE status='pending'")
+        pending_meals = cursor.fetchone()["c"]
+
+        cursor.execute("SELECT COUNT(*) as c FROM room_change WHERE status='pending'")
+        pending_rooms = cursor.fetchone()["c"]
+
+        cursor.execute("""
+            SELECT AVG(t) as avg_time FROM (
+                SELECT TIMESTAMPDIFF(HOUR, datetime, updated_at) as t FROM complaints WHERE status IN ('resolved','rejected')
+                UNION ALL
+                SELECT TIMESTAMPDIFF(HOUR, applied_date, updated_at) FROM leaves WHERE status IN ('approved','rejected')
+                UNION ALL
+                SELECT TIMESTAMPDIFF(HOUR, created_at, updated_at) FROM meal_requests WHERE status IN ('approved','rejected')
+                UNION ALL
+                SELECT TIMESTAMPDIFF(HOUR, created_at, updated_at) FROM room_change WHERE status IN ('approved','rejected')
+            ) x
+        """)
+        avg_time = cursor.fetchone()["avg_time"] or 0
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "total_students": total_students,
+            "total_wardens": total_wardens,
+            "total_mess_incharges": total_mess,
+            "active_complaints": active_complaints,
+            "pending_leaves": pending_leaves,
+            "pending_meal_requests": pending_meals,
+            "pending_room_changes": pending_rooms,
+            "avg_resolution_hours": round(avg_time, 1)
+        })
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Failed overview"}),500
+
+def get_trend(cursor, table, date_col, status_col, period, status_filter):
+    if period == "year":
+        fmt = "%Y-%m"
+    elif period == "month":
+        fmt = "%Y-%m-%d"
+    else:
+        fmt = "%H"
+
+    q = f"""
+        SELECT DATE_FORMAT({date_col}, '{fmt}') p, COUNT(*) c
+        FROM {table}
+    """
+
+    cond = []
+    vals = []
+
+    if status_filter != "all":
+        cond.append(f"{status_col}=%s")
+        vals.append(status_filter)
+
+    if cond:
+        q += " WHERE " + " AND ".join(cond)
+
+    q += f" GROUP BY p ORDER BY p"
+
+    cursor.execute(q, vals)
+    return cursor.fetchall()
+
+def get_time_group(level):
+    if level == "year":
+        return "%Y-%m", "MONTH"
+    elif level == "month":
+        return "%Y-%m-%d", "DAY"
+    else:
+        return "%Y-%m-%d %H:00", "HOUR"
+
+@app.route("/analytics-complaints", methods=["GET"])
+@admin_required
+def complaints_analytics():
+    try:
+        period = request.args.get("period", "month")
+        date_val = request.args.get("date")
+        status = request.args.get("status", "all")
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        where = "WHERE 1=1"
+        fmt = "%Y-%m-%d" # fallback
+        
+        if period == "year" and date_val:
+            where += f" AND YEAR(datetime) = '{date_val}'"
+            fmt = "%Y-%m"  # Group by month
+        elif period == "month" and date_val:
+            where += f" AND DATE_FORMAT(datetime, '%Y-%m') = '{date_val}'"
+            fmt = "%Y-%m-%d" # Group by day
+        elif period == "day" and date_val:
+            where += f" AND DATE(datetime) = '{date_val}'"
+            fmt = "%H:00" # Group by hour
+            
+        if status != "all":
+            where += f" AND status = '{status}'"
+            
+        cursor.execute(f"SELECT COUNT(*) as c FROM complaints {where}")
+        total = cursor.fetchone()["c"]
+        
+        cursor.execute(f"SELECT COUNT(*) as c FROM complaints {where} AND status='pending'")
+        pending = cursor.fetchone()["c"]
+        
+        cursor.execute(f"SELECT COUNT(*) as c FROM complaints {where} AND status='in_progress'")
+        in_progress = cursor.fetchone()["c"]
+        
+        cursor.execute(f"""
+            SELECT DATE_FORMAT(datetime, '{fmt}') as t, COUNT(*) as c
+            FROM complaints
+            {where}
+            GROUP BY t
+            ORDER BY t
+        """)
+        trend = cursor.fetchall()
+        
+        # Get raw data for 'View All' Modal
+        cursor.execute(f"SELECT * FROM complaints {where} ORDER BY datetime DESC LIMIT 100")
+        all_records = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "total": total,
+            "pending": pending,
+            "progress": in_progress,
+            "trend": trend,
+            "all": all_records
+        })
+        
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Failed complaints analytics"}), 500
+
+
+@app.route("/analytics-leaves", methods=["GET"])
+@admin_required
+def leaves_analytics():
+    try:
+        period = request.args.get("period", "month")
+        date_val = request.args.get("date")
+        status = request.args.get("status", "all")
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        where = "WHERE 1=1"
+        fmt = "%Y-%m-%d"
+        
+        if period == "year" and date_val:
+            where += f" AND YEAR(applied_date) = '{date_val}'"
+            fmt = "%Y-%m"
+        elif period == "month" and date_val:
+            where += f" AND DATE_FORMAT(applied_date, '%Y-%m') = '{date_val}'"
+            fmt = "%Y-%m-%d"
+        elif period == "day" and date_val:
+            where += f" AND DATE(applied_date) = '{date_val}'"
+            fmt = "%H:00"
+            
+        if status != "all":
+            where += f" AND status = '{status}'"
+            
+        cursor.execute(f"SELECT COUNT(*) as c FROM leaves {where}")
+        total = cursor.fetchone()["c"]
+        
+        cursor.execute(f"SELECT COUNT(*) as c FROM leaves {where} AND status='pending'")
+        pending = cursor.fetchone()["c"]
+        
+        cursor.execute(f"""
+            SELECT DATE_FORMAT(applied_date, '{fmt}') as t, COUNT(*) as c
+            FROM leaves
+            {where}
+            GROUP BY t
+            ORDER BY t
+        """)
+        trend = cursor.fetchall()
+        
+        cursor.execute(f"SELECT * FROM leaves {where} ORDER BY applied_date DESC LIMIT 100")
+        all_records = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "total": total,
+            "pending": pending,
+            "trend": trend,
+            "all": all_records
+        })
+        
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Failed leaves analytics"}), 500
+
+
+@app.route("/analytics-room-change", methods=["GET"])
+@admin_required
+def room_change_analytics():
+    try:
+        period = request.args.get("period", "month")
+        date_val = request.args.get("date")
+        status = request.args.get("status", "all")
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        where = "WHERE 1=1"
+        fmt = "%Y-%m-%d"
+        
+        if period == "year" and date_val:
+            where += f" AND YEAR(created_at) = '{date_val}'"
+            fmt = "%Y-%m"
+        elif period == "month" and date_val:
+            where += f" AND DATE_FORMAT(created_at, '%Y-%m') = '{date_val}'"
+            fmt = "%Y-%m-%d"
+        elif period == "day" and date_val:
+            where += f" AND DATE(created_at) = '{date_val}'"
+            fmt = "%H:00"
+            
+        if status != "all":
+            where += f" AND status = '{status}'"
+            
+        cursor.execute(f"SELECT COUNT(*) as c FROM room_change {where}")
+        total = cursor.fetchone()["c"]
+        
+        cursor.execute(f"SELECT COUNT(*) as c FROM room_change {where} AND status='pending'")
+        pending = cursor.fetchone()["c"]
+        
+        cursor.execute(f"""
+            SELECT DATE_FORMAT(created_at, '{fmt}') as t, COUNT(*) as c
+            FROM room_change
+            {where}
+            GROUP BY t
+            ORDER BY t
+        """)
+        trend = cursor.fetchall()
+        
+        cursor.execute(f"SELECT * FROM room_change {where} ORDER BY created_at DESC LIMIT 100")
+        all_records = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "total": total,
+            "pending": pending,
+            "trend": trend,
+            "all": all_records
+        })
+        
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Failed room analytics"}), 500
+    
+    
+@app.route("/analytics-meal-requests", methods=["GET"])
+@admin_required
+def meals_analytics():
+    try:
+        period = request.args.get("period", "month")
+        date_val = request.args.get("date")
+        status = request.args.get("status", "all")
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        where = "WHERE 1=1"
+        fmt = "%Y-%m-%d"
+        
+        if period == "year" and date_val:
+            where += f" AND YEAR(created_at) = '{date_val}'"
+            fmt = "%Y-%m"
+        elif period == "month" and date_val:
+            where += f" AND DATE_FORMAT(created_at, '%Y-%m') = '{date_val}'"
+            fmt = "%Y-%m-%d"
+        elif period == "day" and date_val:
+            where += f" AND DATE(created_at) = '{date_val}'"
+            fmt = "%H:00"
+            
+        if status != "all":
+            where += f" AND status = '{status}'"
+            
+        cursor.execute(f"SELECT COUNT(*) as c FROM meal_requests {where}")
+        total = cursor.fetchone()["c"]
+        
+        cursor.execute(f"SELECT COUNT(*) as c FROM meal_requests {where} AND status='pending'")
+        pending = cursor.fetchone()["c"]
+        
+        cursor.execute(f"""
+            SELECT DATE_FORMAT(created_at, '{fmt}') as t, COUNT(*) as c
+            FROM meal_requests
+            {where}
+            GROUP BY t
+            ORDER BY t
+        """)
+        trend = cursor.fetchall()
+        
+        cursor.execute(f"SELECT * FROM meal_requests {where} ORDER BY created_at DESC LIMIT 100")
+        all_records = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "total": total,
+            "pending": pending,
+            "trend": trend,
+            "all": all_records
+        })
+        
+    except Exception as e:
+        print(str(e))
+        return jsonify({"message":"Failed meal analytics"}), 500
 
 @app.route("/")
 def home():

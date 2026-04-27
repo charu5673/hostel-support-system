@@ -23,7 +23,7 @@ export function UpdateProvider({ children }) {
     update.resolve({
       'update': true,
       'note': note.current.value,
-      'newRoom': newRoomRef.current.value ? newRoomRef.current.value : null,
+      'newRoom': newRoomRef.current ? newRoomRef.current.value : null,
     });
     setUpdate(null);
   };

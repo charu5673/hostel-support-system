@@ -50,6 +50,13 @@ export const studentOptions = [
     actions: [
     { name: 'View hostel facilities timings', id: 14 },
     ]
+  },
+  {
+    name: 'Settings',
+    svg: <ComplaintSVG />,
+    actions: [
+      { name: 'Email notifications settings', id: 15}
+    ]
   }
 ];
 
@@ -138,7 +145,7 @@ export const adminOptions = [
     svg: <ComplaintSVG />,
     actions: [
     { name: 'Valid email domains', id: 3 },
-    { name: 'Student requests limitations', id: 4}
+    { name: 'Set system configurations', id: 4}
     ]
   },
   {
@@ -148,7 +155,37 @@ export const adminOptions = [
       {
         name: 'View users',
         id: 5
+      },
+      {
+        name: 'Pending users',
+        id: 6
       }
     ]
   },
+  {
+    name: 'Analytics',
+    svg: <ComplaintSVG />,
+    actions: [
+      {
+        name: 'Overview',
+        id: 7
+      },
+      {
+        name: 'Complaints',
+        id: 8
+      },
+      {
+        name: 'Leaves',
+        id: 9
+      },
+      {
+        name: 'Room changes',
+        id: 10
+      },
+      {
+        name: 'Meal requests',
+        id: 11
+      },
+    ]
+  }
 ];

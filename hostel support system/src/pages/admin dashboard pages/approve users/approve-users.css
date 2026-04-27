@@ -1,0 +1,102 @@
+.approve-users-outer {
+  padding: 30px;
+  height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.approve-users-outer h1 {
+  color: var(--blue);
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.approve-users-outer h2 {
+  color: var(--blue);
+  font-size: 28px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+.user-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.user-filter-row button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #f0f0f0;
+}
+
+.user-filter-row button.active-filter {
+  background: var(--blue);
+  color: white;
+}
+
+.users-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.user-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-header-left h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #666;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #888;
+}
+
+.user-header-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.user-date {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.user-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.user-actions button:nth-child(1) {
+  background: #27ae60;
+  color: white;
+}
+
+.user-actions button:nth-child(2) {
+  background: #e74c3c;
+  color: white;
+}
