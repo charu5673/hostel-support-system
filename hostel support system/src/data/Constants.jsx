@@ -1,5 +1,5 @@
 export const Constants = {
-  'API': "http://localhost:5000",
+  'API': import.meta.env.API_URL,
   'ROUTES': {
     // Auth Routes
     'LOGIN': '/login',

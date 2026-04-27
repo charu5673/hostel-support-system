@@ -7,7 +7,7 @@ import { useAlert } from "../contexts/alert/useAlert"
 import { useLoading } from "../contexts/loading/useLoading"
 import { useNavigate } from "react-router-dom"
 import { Constants } from '../data/Constants';
-import TopBar from '../components/Topbar';
+import TopBar from '../components/TopBar';
 
 function Dashboard() {
 
