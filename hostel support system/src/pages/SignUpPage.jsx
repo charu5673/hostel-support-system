@@ -33,6 +33,8 @@ function SignUpPage() {
       return;
     }
 
+    console.log(`${Constants.API}${Constants.ROUTES.SIGNUP}`)
+
     const res = await loadingFetch(`${Constants.API}${Constants.ROUTES.SIGNUP}`, {
       method: "POST",
       headers: {
