@@ -11,6 +11,7 @@ from functools import wraps
 import random
 from datetime import datetime, timedelta, timezone, date
 import json
+import pymysql
 
 from flask_mail import Message
 import threading
@@ -131,12 +132,13 @@ def mess_required(fn):
 
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host=os.getenv("MYSQL_HOST", "localhost"),
-        user=os.getenv("MYSQL_USER", "root"),
-        password=os.getenv("MYSQL_PASSWORD", ""),
-        database=os.getenv("MYSQL_DB", "hostel_db"),
-        port=int(os.getenv("MYSQL_PORT", 3306))
+    return pymysql.connect(
+        host=os.environ.get("MYSQLHOST"),
+        user=os.environ.get("MYSQLUSER"),
+        password=os.environ.get("MYSQLPASSWORD"),
+        database=os.environ.get("MYSQLDATABASE"),
+        port=int(os.environ.get("MYSQLPORT")),
+        cursorclass=pymysql.cursors.DictCursor
     )
 
 
