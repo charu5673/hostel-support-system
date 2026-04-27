@@ -35,7 +35,7 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+CORS(app, supports_credentials=True)
 
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-secret-key")
 app.config['PORT'] = int(os.getenv("FLASK_PORT", 5000))
@@ -133,12 +133,14 @@ def mess_required(fn):
 
 def get_db_connection():
     return pymysql.connect(
-        host=os.environ.get("MYSQLHOST"),
-        user=os.environ.get("MYSQLUSER"),
-        password=os.environ.get("MYSQLPASSWORD"),
-        database=os.environ.get("MYSQLDATABASE"),
-        port=int(os.environ.get("MYSQLPORT")),
-        cursorclass=pymysql.cursors.DictCursor
+        host=os.environ.get("MYSQL_HOST"),
+        user=os.environ.get("MYSQL_USER"),
+        password=os.environ.get("MYSQL_PASSWORD"),
+        database=os.environ.get("MYSQL_NAME"),
+        port=int(os.environ.get("MYSQL_PORT", 3306)),
+        cursorclass=pymysql.cursors.DictCursor,
+        connect_timeout=10,
+        ssl={"ssl": {}}
     )
 
 
