@@ -1,3 +1,5 @@
+import traceback
+
 from flask import Flask,request, jsonify
 from flask_cors import CORS
 from flask_mail import Mail, Message
@@ -757,6 +759,7 @@ def signup():
     try:
 
         conn = get_db_connection()
+        print("CONNECTED OK")
         cursor = conn.cursor()
 
         allowed_domains = get_allowed_domains(cursor)
@@ -845,8 +848,9 @@ def signup():
         return jsonify({"message":"Verification email sent"}),201
 
     except Exception as e:
+        traceback.print_exc()
         print(str(e))
-        return jsonify({"message":"Signup error","error":str(e)}),500
+        return jsonify({"message":"Signup error","error":str(e),"type": str(type(e))}),500
 
 
 @app.route("/verify/<token>")
