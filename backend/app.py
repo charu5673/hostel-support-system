@@ -90,7 +90,7 @@ def role_required(*roles):
 
             try:
                 conn = get_db_connection()
-                cursor = conn.cursor(dictionary=True)
+                cursor = conn.cursor(pymysql.cursors.DictCursor)
 
                 cursor.execute(
                     "SELECT status FROM users WHERE id = %s",
@@ -142,7 +142,6 @@ def get_db_connection():
         password=os.environ.get("MYSQL_PASSWORD"),
         database=os.environ.get("MYSQL_NAME"),
         port=int(os.environ.get("MYSQL_PORT", 3306)),
-        cursorclass=pymysql.cursors.DictCursor,
         connect_timeout=10,
         ssl={"ssl": {}}
     )
@@ -166,7 +165,7 @@ def is_email_allowed(email, allowed_domains):
 @admin_required
 def get_email_domains():
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     cursor.execute(
         "SELECT id, domain, is_active, created_at FROM email_policies"
@@ -287,7 +286,7 @@ def can_send_email(settings, category, sub=None):
 def get_user_settings(user_id):
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
     cursor.execute(
         "SELECT settings FROM user_email_settings WHERE user_id=%s",
         (user_id,)
@@ -303,7 +302,7 @@ def get_user_settings(user_id):
 def get_user_email(user_id):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             "SELECT email FROM users WHERE id = %s",
@@ -377,7 +376,7 @@ def send_email(to, subject, body, html=None):
 def get_all_users():
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -475,7 +474,7 @@ def add_user():
 def get_user_complaints_by_roll(roll_no):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -502,7 +501,7 @@ def get_user_complaints_by_roll(roll_no):
 def get_user_leaves_by_roll(roll_no):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -529,7 +528,7 @@ def get_user_leaves_by_roll(roll_no):
 def get_user_meal_requests_by_roll(roll_no):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -556,7 +555,7 @@ def get_user_meal_requests_by_roll(roll_no):
 def get_user_room_change_by_roll(roll_no):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -583,7 +582,7 @@ def get_user_room_change_by_roll(roll_no):
 def get_user_item_reports_by_roll(roll_no):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -610,7 +609,7 @@ def get_user_item_reports_by_roll(roll_no):
 def get_user_feedback_by_roll(roll_no):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -637,7 +636,7 @@ def get_user_feedback_by_roll(roll_no):
 def get_user_announcements_by_id(user_id):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         cursor.execute(
             """
@@ -663,7 +662,7 @@ def get_user_announcements_by_id(user_id):
 def get_config():
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -885,7 +884,7 @@ def login():
     password = data.get("password")
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     cursor.execute(
         "SELECT * FROM users WHERE email=%s",
@@ -973,7 +972,7 @@ def get_announcements():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1015,7 +1014,7 @@ def get_user_announcements():
         user_id = claims["id"]
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1177,7 +1176,7 @@ def get_user_complaints():
         roll_no = claims["roll_no"]
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1224,7 +1223,7 @@ def get_complaints():
     try:
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1383,7 +1382,7 @@ def get_user_leaves():
         roll_no = claims["roll_no"]
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1430,7 +1429,7 @@ def get_leaves():
 
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1539,7 +1538,7 @@ def share_mess_feedback():
 def get_mess_feedback():
     try:
         conn = get_db_connection()
-        cur = conn.cursor(dictionary=True)
+        cur = conn.cursor(pymysql.cursors.DictCursor)
 
         cur.execute(
             """
@@ -1566,7 +1565,7 @@ def get_mess_feedback():
 def get_mess_menu():
     try:
         conn = get_db_connection()
-        cur = conn.cursor(dictionary=True)
+        cur = conn.cursor(pymysql.cursors.DictCursor)
 
         cur.execute("""
         SELECT * FROM mess_menu
@@ -1802,7 +1801,7 @@ def get_user_meal_requests():
         roll_no = claims["roll_no"]
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1849,7 +1848,7 @@ def get_meal_requests():
     try:
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -1998,7 +1997,7 @@ def get_user_room_change_requests():
         roll_no = claims["roll_no"]
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -2044,7 +2043,7 @@ def get_room_change_requests():
     try:
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -2250,7 +2249,7 @@ def get_user_item_reports():
         roll_no = claims["roll_no"]
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -2345,7 +2344,7 @@ def claim_found_item(request_id):
 def get_facility_timings():
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     cursor.execute("SELECT * FROM timings ORDER BY facility, day")
     rows = cursor.fetchall()
@@ -2602,7 +2601,7 @@ def me_db():
     user_id = int(get_jwt_identity())
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     cursor.execute(
         """
@@ -2627,7 +2626,7 @@ def get_item_reports():
     try:
 
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             """
@@ -2742,7 +2741,7 @@ def get_email_settings():
     try:
         user_id = int(get_jwt_identity())
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute(
             "SELECT settings FROM user_email_settings WHERE user_id = %s",
@@ -2799,7 +2798,7 @@ def update_email_settings():
 @admin_required
 def get_pending_users():
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
     cursor.execute(
         "SELECT id, name, email, user_type, status, created_at FROM users WHERE status = 'pending'"
     )
@@ -3102,7 +3101,7 @@ def dev_populate_room_change():
 @app.route("/populate-announcements")
 def populate_announcements():
     conn = get_db_connection()
-    cur = conn.cursor(dictionary=True)
+    cur = conn.cursor(pymysql.cursors.DictCursor)
 
     titles = [
         "Water Supply Maintenance",
@@ -3320,7 +3319,7 @@ def populate_facility_timings():
 def analytics_overview():
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute("SELECT COUNT(*) as c FROM users WHERE user_type='student'")
         total_students = cursor.fetchone()["c"]
@@ -3423,7 +3422,7 @@ def complaints_analytics():
         status = request.args.get("status", "all")
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         where = "WHERE 1=1"
         fmt = "%Y-%m-%d" # fallback
@@ -3488,7 +3487,7 @@ def leaves_analytics():
         status = request.args.get("status", "all")
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         where = "WHERE 1=1"
         fmt = "%Y-%m-%d"
@@ -3548,7 +3547,7 @@ def room_change_analytics():
         status = request.args.get("status", "all")
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         where = "WHERE 1=1"
         fmt = "%Y-%m-%d"
@@ -3608,7 +3607,7 @@ def meals_analytics():
         status = request.args.get("status", "all")
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         where = "WHERE 1=1"
         fmt = "%Y-%m-%d"
