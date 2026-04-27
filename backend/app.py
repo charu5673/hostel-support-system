@@ -783,7 +783,7 @@ def signup():
                 """
                 INSERT INTO users
                 (name,email,password,is_verified,user_type,room,roll_no,status)
-                VALUES (%s,%s,%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s,%s,%s, %s)
                 """,
                 (name,email,password_hash,False,user_type,room,roll_no,status)
             )
@@ -794,7 +794,7 @@ def signup():
                 """
                 INSERT INTO users
                 (name,email,password,is_verified,user_type, status)
-                VALUES (%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s, %s)
                 """,
                 (name,email,password_hash,False,user_type, status)
             )
