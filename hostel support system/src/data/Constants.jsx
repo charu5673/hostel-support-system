@@ -1,5 +1,5 @@
 export const Constants = {
-  'API': import.meta.env.API_URL,
+  'API': import.meta.env.VITE_API_URL,
   'ROUTES': {
     // Auth Routes
     'LOGIN': '/login',
