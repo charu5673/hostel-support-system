@@ -151,7 +151,7 @@ def get_allowed_domains(cursor):
     cursor.execute(
         "SELECT domain FROM email_policies WHERE is_active = TRUE"
     )
-    return [row["domain"] for row in cursor.fetchall()]
+    return [row[0] for row in cursor.fetchall()]
 
 
 def is_email_allowed(email, allowed_domains):
