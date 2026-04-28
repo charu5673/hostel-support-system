@@ -25,7 +25,8 @@ function ForgotPassword() {
       const res = await loadingFetch(`${API}${Constants.ROUTES.FORGOT_PASSWORD}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
+        credentials: "include"
       })
 
       const data = await res.json()

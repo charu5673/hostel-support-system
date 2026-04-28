@@ -292,6 +292,14 @@ input {
   text-align: center;
 }
 
+.forgot-pass {
+  margin-top: -3px;
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 300;
+  text-align: center;
+}
+
 .bold-text {
   font-weight: bold;
   cursor: pointer;
