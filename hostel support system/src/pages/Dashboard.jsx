@@ -18,6 +18,7 @@ function Dashboard() {
 
   const [user, setUser] = useState(null)
   const [currentPageIndex, setCurrentPageIndex] = useState(Number(sessionStorage.getItem("dashboard-index")) || 0)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -65,11 +66,41 @@ function Dashboard() {
     'admin': adminOptions
   }
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
+  const closeSidebar = () => {
+    setSidebarOpen(false)
+  }
+
+  const handlePageChangeWithClose = (i) => {
+    handlePageChange(i)
+    closeSidebar()
+  }
+
   return (
     <div className='dashboard-outer'>
+      {/* Sidebar toggle button for mobile */}
+      <button className='sidebar-toggle' onClick={toggleSidebar} aria-label="Toggle menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      
+      {/* Sidebar overlay for mobile */}
+      <div className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`} onClick={closeSidebar}></div>
+      
       {
         user ?
-        <Sidebar options={options[user.role]} changePage={handlePageChange} /> :
+        <Sidebar 
+          options={options[user.role]} 
+          changePage={handlePageChangeWithClose}
+          isOpen={sidebarOpen}
+          onClose={closeSidebar}
+        /> :
         null
       }
       <TopBar handleBack={() => handlePageChange(0)} />

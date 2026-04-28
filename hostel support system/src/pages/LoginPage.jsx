@@ -47,6 +47,7 @@ function LoginPage() {
         <input id='password' name='password' placeholder='Password' type='password'></input>
         <button className='login-btn'>Login</button>
         <p className='sign-nav'>Don't have an account? <span onClick={() => navigate('/signup')} className='bold-text'>Sign Up</span></p>
+        <p className='forgot-pass'>Forgot Password? <span onClick={() => navigate('/forgot-password')} className='bold-text'>Reset Password</span></p>
       </form>
     </div>
   );

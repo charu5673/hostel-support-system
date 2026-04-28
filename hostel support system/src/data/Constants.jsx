@@ -7,6 +7,8 @@ export const Constants = {
     'VERIFY': '/verify',
     'ME': '/me',
     'LOGOUT': '/logout',
+    'FORGOT_PASSWORD': '/forgot-password',
+    'RESET_PASSWORD': '/reset-password',
 
     // Announcements
     'GET_ANNOUNCEMENTS': '/get-announcements',

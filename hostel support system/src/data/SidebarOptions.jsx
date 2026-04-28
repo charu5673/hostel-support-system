@@ -1,4 +1,4 @@
-import { ComplaintSVG, LeaveSVG, MessSVG, RoomSVG, LostAndFoundSVG, TimingsSVG } from "./SidebarIcons";
+import { ComplaintSVG, LeaveSVG, MessSVG, RoomSVG, LostAndFoundSVG, TimingsSVG, SettingsSVG, AnnouncementSVG, FeedbackSVG, MealSVG, MenuSVG, ConfigurationSVG, UsersSVG, AnalyticsSVG } from "./SidebarIcons";
 
 export const studentOptions = [
   {
@@ -53,7 +53,7 @@ export const studentOptions = [
   },
   {
     name: 'Settings',
-    svg: <ComplaintSVG />,
+    svg: <SettingsSVG />,
     actions: [
       { name: 'Email notifications settings', id: 15}
     ]
@@ -63,7 +63,7 @@ export const studentOptions = [
 export const wardenOptions = [
   {
     name: 'Announcements',
-    svg: <ComplaintSVG />,
+    svg: <AnnouncementSVG />,
     actions: [
     { name: 'Make an announcement', id: 1 },
     { name: 'View your announcements', id: 2 }
@@ -78,14 +78,14 @@ export const wardenOptions = [
   },
   {
     name: 'Leaves',
-    svg: <ComplaintSVG />,
+    svg: <LeaveSVG />,
     actions: [
     { name: 'View leave applications', id: 4 },
     ]
   },
   {
     name: 'Room Change',
-    svg: <ComplaintSVG />,
+    svg: <RoomSVG />,
     actions: [
     { name: 'View room change requests', id: 5 },
     ]
@@ -102,7 +102,7 @@ export const wardenOptions = [
 export const messOptions = [
   {
     name: 'Announcements',
-    svg: <ComplaintSVG />,
+    svg: <AnnouncementSVG />,
     actions: [
     { name: 'Make an announcement', id: 1 },
     { name: 'View your announcements', id: 2 }
@@ -110,21 +110,21 @@ export const messOptions = [
   },
   {
     name: 'Feedback',
-    svg: <ComplaintSVG />,
+    svg: <FeedbackSVG />,
     actions: [
     { name: 'View mess feedback', id: 3 }
     ]
   },
   {
     name: 'Meal requests',
-    svg: <ComplaintSVG />,
+    svg: <MealSVG />,
     actions: [
     { name: 'View meal requests', id: 4 }
     ]
   },
   {
     name: 'Mess menu',
-    svg: <ComplaintSVG />,
+    svg: <MenuSVG />,
     actions: [
     { name: 'Update mess menu', id: 5 }
     ]
@@ -134,7 +134,7 @@ export const messOptions = [
 export const adminOptions = [
   {
     name: 'Announcements',
-    svg: <ComplaintSVG />,
+    svg: <AnnouncementSVG />,
     actions: [
     { name: 'Make an announcement', id: 1 },
     { name: 'View your announcements', id: 2 }
@@ -142,7 +142,7 @@ export const adminOptions = [
   },
   {
     name: 'Configurations',
-    svg: <ComplaintSVG />,
+    svg: <ConfigurationSVG />,
     actions: [
     { name: 'Valid email domains', id: 3 },
     { name: 'Set system configurations', id: 4}
@@ -150,7 +150,7 @@ export const adminOptions = [
   },
   {
     name: 'Users',
-    svg: <ComplaintSVG />,
+    svg: <UsersSVG />,
     actions: [
       {
         name: 'View users',
@@ -164,7 +164,7 @@ export const adminOptions = [
   },
   {
     name: 'Analytics',
-    svg: <ComplaintSVG />,
+    svg: <AnalyticsSVG />,
     actions: [
       {
         name: 'Overview',

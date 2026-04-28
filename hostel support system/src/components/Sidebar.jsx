@@ -15,7 +15,7 @@ import { useState } from 'react';
 
 
 
-function Sidebar({options, changePage}) {
+function Sidebar({options, changePage, isOpen, onClose}) {
 
   let defaultState = [];
   for(let i = 0; i < options.length; i++) {
@@ -33,7 +33,8 @@ function Sidebar({options, changePage}) {
   }
 
   return (
-    <div className='sidebar-outer'>
+    <div className={`sidebar-outer ${isOpen ? 'open' : ''}`}>
+      <button className="sidebar-close-btn" onClick={onClose} aria-label="Close menu">×</button>
       <h1 className='sidebar-title'>Hostel<br></br>Link</h1>
       <div className='sidebar-options'>
         {

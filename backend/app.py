@@ -947,6 +947,99 @@ def logout():
     return response , 200
 
 
+@app.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.json
+    email = data.get("email", "").strip()
+
+    if not email:
+        return jsonify({"message": "Email is required"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        cursor.execute("SELECT id, name FROM users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if not user:
+            return jsonify({"message": "If the email exists, a reset link will be sent"}), 200
+
+        token = serializer.dumps(email, salt="password-reset")
+        
+        base_url = os.getenv("BASE_URL", f"http://127.0.0.1:{app.config['PORT']}")
+        reset_link = f"{base_url}/reset-password/{token}"
+
+        msg = Message(
+            "Password Reset Request",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
+
+        msg.body = f"""
+Hello {user['name']},
+
+You requested a password reset for your Hostel Link account.
+
+Click the link below to reset your password:
+{reset_link}
+
+This link will expire in 1 hour.
+
+If you didn't request this, please ignore this email.
+"""
+
+        mail.send(msg)
+
+        return jsonify({"message": "If the email exists, a reset link will be sent"}), 200
+
+    except Exception as e:
+        print("Forgot password error:", str(e))
+        return jsonify({"message": "An error occurred. Please try again later."}), 500
+
+
+@app.route("/reset-password/<token>", methods=["POST"])
+def reset_password(token):
+    data = request.json
+    new_password = data.get("new_password", "").strip()
+
+    if not new_password:
+        return jsonify({"message": "New password is required"}), 400
+
+    if len(new_password) < 6:
+        return jsonify({"message": "Password must be at least 6 characters"}), 400
+
+    try:
+        email = serializer.loads(token, salt="password-reset", max_age=3600)
+    except Exception as e:
+        print("Token validation error:", str(e))
+        return jsonify({"message": "Reset link invalid or expired"}), 400
+
+    try:
+        password_hash = generate_password_hash(new_password)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "UPDATE users SET password = %s WHERE email = %s",
+            (password_hash, email)
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Password reset successful"}), 200
+
+    except Exception as e:
+        print("Reset password error:", str(e))
+        return jsonify({"message": "An error occurred. Please try again later."}), 500
+
+
 @app.route("/me")
 @jwt_required()
 def me():
@@ -2867,451 +2960,6 @@ def refresh_expiring_jwts(response):
 
     return response
 
-def generate_bursty_date():
-    """Generates dates with artificial peaks for certain days and hours."""
-    now = datetime.now()
-    chance = random.random()
-    
-    # 1. Create bursty days/months (Peaks and Valleys)
-    if chance < 0.15:
-        # 15% of requests clustered in a single busy week recently
-        base_date = now - timedelta(days=10 + random.randint(0, 3))
-    elif chance < 0.30:
-        # 15% clustered around mid-terms/finals period (e.g., ~150 days ago)
-        base_date = now - timedelta(days=150 + random.randint(0, 5))
-    elif chance < 0.45:
-        # 15% clustered over a year ago
-        base_date = now - timedelta(days=400 + random.randint(0, 10))
-    else:
-        # 55% spread randomly over the last 3 years (1095 days)
-        base_date = now - timedelta(days=random.randint(0, 1095))
-        
-    # 2. Create bursty hours (e.g., lots of requests at 9 AM, 2 PM, and 10 PM)
-    hour_chance = random.random()
-    if hour_chance < 0.25:
-        hour = 22  # 10 PM peak
-    elif hour_chance < 0.50:
-        hour = 9   # 9 AM peak
-    elif hour_chance < 0.70:
-        hour = 14  # 2 PM peak
-    else:
-        hour = random.randint(0, 23) # Random hour
-        
-    return base_date.replace(hour=hour, minute=random.randint(0, 59), second=random.randint(0, 59))
-
-
-@app.route("/dev/populate/complaints")
-def dev_populate_complaints():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        roll_nos = [3445678, 12345678]
-        complaint_types = ["room", "washroom", "cleaning", "laundry", "gym", "other"]
-        priorities = ["low", "medium", "high"]
-        statuses = ["pending", "in_progress", "resolved", "rejected"]
-
-        cur.execute("DELETE FROM complaints")
-
-        for i in range(400): # Increased to 400
-            created_dt = generate_bursty_date()
-            
-            # Weighted statuses: mostly resolved/rejected for older dates, higher chance of pending for recent
-            is_recent = (datetime.now() - created_dt).days < 14
-            if is_recent:
-                status = random.choices(statuses, weights=[40, 30, 20, 10])[0]
-            else:
-                status = random.choices(statuses, weights=[5, 5, 70, 20])[0]
-
-            # Determine updated_at
-            if status in ['resolved', 'rejected']:
-                # Resolved between 1 and 5 days after creation
-                updated_dt = created_dt + timedelta(days=random.randint(1, 5), hours=random.randint(1, 12))
-                # Cap it at current time if it generated a future date
-                updated_dt = min(updated_dt, datetime.now())
-                updated_str = updated_dt.strftime('%Y-%m-%d %H:%M:%S')
-            else:
-                updated_str = None
-
-            cur.execute(
-                """
-                INSERT INTO complaints
-                (roll_no, room, type, description, priority, status, datetime, updated_at, note)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    random.choice(roll_nos),
-                    random.randint(100, 499), # More room variation
-                    random.choice(complaint_types),
-                    f"Test complaint {i} detailing the issue.",
-                    random.choice(priorities),
-                    status,
-                    created_dt.strftime('%Y-%m-%d %H:%M:%S'),
-                    updated_str,
-                    "dev note" if random.random() > 0.7 else None
-                )
-            )
-
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"message": "Complaints populated with 400 varied records"}), 200
-
-    except Exception as e:
-        print(str(e))
-        return jsonify({"message": "Failed"}), 500
-
-
-@app.route("/dev/populate/leaves")
-def dev_populate_leaves():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        roll_nos = [3445678, 12345678]
-        statuses = ["pending", "approved", "rejected"]
-
-        cur.execute("DELETE FROM leaves")
-
-        for i in range(250): # Increased to 250
-            applied_dt = generate_bursty_date()
-            # Start date is usually 1 to 14 days after applied date
-            start_dt = applied_dt + timedelta(days=random.randint(1, 14))
-            # Duration is between 1 and 7 days
-            end_dt = start_dt + timedelta(days=random.randint(1, 7))
-            
-            # Weighted statuses
-            status = random.choices(statuses, weights=[15, 70, 15])[0]
-
-            cur.execute(
-                """
-                INSERT INTO leaves
-                (roll_no, start_date, end_date, applied_date, description, status, note)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    random.choice(roll_nos),
-                    start_dt.strftime('%Y-%m-%d'),
-                    end_dt.strftime('%Y-%m-%d'),
-                    applied_dt.strftime('%Y-%m-%d %H:%M:%S'),
-                    f"Leave reason generated {i}",
-                    status,
-                    "Leave admin note" if random.random() > 0.8 else None
-                )
-            )
-
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"message": "Leaves populated with 250 varied records"}), 200
-
-    except Exception as e:
-        print(str(e))
-        return jsonify({"message": "Failed"}), 500
-
-
-@app.route("/dev/populate/meals")
-def dev_populate_meals():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        roll_nos = [3445678, 12345678]
-        meals = ['breakfast', 'lunch', 'snacks', 'dinner']
-        statuses = ["pending", "approved", "rejected"]
-
-        cur.execute("DELETE FROM meal_requests")
-
-        for i in range(350): # Increased to 350
-            created_dt = generate_bursty_date()
-            # Meal is usually requested for 1-3 days in advance
-            meal_dt = created_dt + timedelta(days=random.randint(1, 3))
-            day_of_week = meal_dt.strftime('%A')
-            
-            status = random.choices(statuses, weights=[20, 60, 20])[0]
-
-            cur.execute(
-                """
-                INSERT INTO meal_requests
-                (reason, day, roll_no, meal_time, status, date, reoccurring, created_at, note)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    f"Meal request {i} reasoning",
-                    day_of_week,
-                    random.choice(roll_nos),
-                    random.choice(meals),
-                    status,
-                    meal_dt.strftime('%Y-%m-%d'),
-                    random.choice([True, False]), # Randomize reoccurring boolean
-                    created_dt.strftime('%Y-%m-%d %H:%M:%S'),
-                    "Dietary note" if random.random() > 0.75 else None
-                )
-            )
-
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"message": "Meal requests populated with 350 varied records"}), 200
-
-    except Exception as e:
-        print(str(e))
-        return jsonify({"message": "Failed"}), 500
-
-
-@app.route("/dev/populate/room-change")
-def dev_populate_room_change():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        roll_nos = [3445678, 12345678]
-        statuses = ["pending", "approved", "rejected"]
-
-        cur.execute("DELETE FROM room_change")
-
-        for i in range(150): # Increased to 150
-            created_dt = generate_bursty_date()
-            current_room = random.randint(100, 399)
-            new_room = random.randint(100, 399) if random.random() > 0.5 else None
-            status = random.choices(statuses, weights=[30, 40, 30])[0]
-
-            cur.execute(
-                """
-                INSERT INTO room_change
-                (reason, current_room, new_room, roll_no, status, created_at, note)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    f"Room change requested {i}",
-                    current_room,
-                    new_room,
-                    random.choice(roll_nos),
-                    status,
-                    created_dt.strftime('%Y-%m-%d %H:%M:%S'),
-                    "Wants better view" if random.random() > 0.8 else None
-                )
-            )
-
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"message": "Room change populated with 150 varied records"}), 200
-
-    except Exception as e:
-        print(str(e))
-        return jsonify({"message": "Failed"}), 500
-
-@app.route("/populate-announcements")
-def populate_announcements():
-    conn = get_db_connection()
-    cur = conn.cursor(pymysql.cursors.DictCursor)
-
-    titles = [
-        "Water Supply Maintenance",
-        "Hostel Gate Timing Update",
-        "Electricity Shutdown Notice",
-        "Mess Menu Change",
-        "WiFi Maintenance",
-        "Room Inspection Notice",
-        "Fire Drill Announcement",
-        "Guest Entry Policy Update",
-        "Common Room Renovation",
-        "Laundry Service Update"
-    ]
-
-    descriptions = [
-        "Water supply will be temporarily interrupted for maintenance work.",
-        "Hostel gate closing time has been updated for security reasons.",
-        "Electricity will be shut down for scheduled maintenance.",
-        "The mess menu has been updated for the upcoming week.",
-        "WiFi services will be unavailable for a short maintenance window.",
-        "Routine room inspections will be conducted by hostel staff.",
-        "A fire safety drill will be conducted for all residents.",
-        "New guidelines have been issued regarding guest entry.",
-        "Renovation work will begin in the common room area.",
-        "Laundry service timings have been slightly modified."
-    ]
-
-    types = ['general','facilities','mess', 'laundry', 'timings', 'other']
-
-    priorities = ["low", "medium", "high"]
-
-    for i in range(10):
-
-        title = titles[i]
-        desc = descriptions[i]
-        t = random.choice(types)
-        dur = random.randint(1, 7)
-        p = random.choice(priorities)
-
-        q = """
-        INSERT INTO announcements (title, description, type, duration, priority)
-        VALUES (%s, %s, %s, %s, %s)
-        """
-
-        cur.execute(q, (title, desc, t, dur, p))
-
-        conn.commit()
-
-    print("10 announcements inserted")
-
-    cur.close()
-    conn.close()
-
-    return("announcements added")
-
-@app.route("/populate-mess-menu")
-def populate_mess_menu():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        cur.execute("DELETE FROM mess_menu")
-
-        cur.execute("""
-        INSERT INTO mess_menu (day, breakfast, lunch, snacks, dinner) VALUES
-
-        ('Monday',
-        'Poha, Boiled Eggs, Bread Butter, Tea',
-        'Dal Tadka, Jeera Rice, Roti, Salad, Pickle',
-        'Samosa, Green Chutney, Tea',
-        'Paneer Butter Masala, Roti, Steamed Rice, Gulab Jamun'),
-
-        ('Tuesday',
-        'Idli, Sambar, Coconut Chutney, Tea',
-        'Rajma, Steamed Rice, Roti, Salad',
-        'Biscuits, Banana, Tea',
-        'Aloo Gobi, Dal Fry, Roti, Rice'),
-
-        ('Wednesday',
-        'Upma, Bread Butter, Boiled Eggs, Tea',
-        'Chole, Jeera Rice, Roti, Onion Salad',
-        'Pakoda, Mint Chutney, Tea',
-        'Mix Veg Curry, Dal Tadka, Roti, Rice'),
-
-        ('Thursday',
-        'Bread Omelette, Butter Toast, Tea',
-        'Veg Pulao, Raita, Papad, Salad',
-        'Samosa, Ketchup, Tea',
-        'Paneer Bhurji, Roti, Dal Fry, Rice'),
-
-        ('Friday',
-        'Aloo Paratha, Curd, Pickle, Tea',
-        'Dal Makhani, Jeera Rice, Roti, Salad',
-        'Tea, Marie Biscuits, Banana',
-        'Mix Veg, Dal Tadka, Roti, Rice'),
-
-        ('Saturday',
-        'Masala Dosa, Sambar, Coconut Chutney, Tea',
-        'Fried Rice, Manchurian, Salad',
-        'Veg Cutlet, Ketchup, Tea',
-        'Paneer Curry, Roti, Dal Fry, Rice'),
-
-        ('Sunday',
-        'Puri, Aloo Bhaji, Jalebi, Tea',
-        'Chicken Biryani, Raita, Salad',
-        'Samosa, Tea, Biscuits',
-        'Butter Chicken, Roti, Jeera Rice, Ice Cream')
-
-        """)
-
-        conn.commit()
-
-        cur.close()
-        conn.close()
-
-        return jsonify({"success": True})
-
-    except Exception as e:
-        print(str(e))
-        return jsonify({"success": False, "error": str(e)})
-    
-@app.route("/populate-lost-and-found")
-def populate_lost_and_found():
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    data = [
-        (220101, "Black leather wallet with some cards", "Wallet", "https://images.unsplash.com/photo-1601597111158-2fceff292cdc", "2026-03-10", "9876543210", "lost"),
-        (220102, "Blue metal water bottle left near mess", "Bottle", "https://images.unsplash.com/photo-1523362628745-0c100150b504", "2026-03-10", "9123456780", "found"),
-        (220103, "Casio scientific calculator", "Calculator", "https://images.unsplash.com/photo-1587145820266-a5951ee6f620", "2026-03-11", "9988776655", "lost"),
-        (220104, "Set of keys with red keychain", "Keys", "https://images.unsplash.com/photo-1582139329536-e7284fece509", "2026-03-11", "9012345678", "found"),
-        (220105, "Grey hoodie left in study room", "Hoodie", "https://images.unsplash.com/photo-1520975922284-8b456906c813", "2026-03-12", "9090909090", "lost"),
-        (220106, "Pair of wireless earbuds in case", "Earbuds", "https://images.unsplash.com/photo-1585386959984-a41552231658", "2026-03-12", "9345678123", "found"),
-        (220107, "Spiral notebook with math notes", "Notebook", "https://images.unsplash.com/photo-1531346680769-a1d79b57de5c", "2026-03-13", "9786541230", "lost"),
-        (220108, "Black backpack found near hostel gate", "Backpack", "https://images.unsplash.com/photo-1553062407-98eeb64c6a62", "2026-03-13", "9654321876", "found"),
-        (220109, "Silver wrist watch", "Watch", "https://images.unsplash.com/photo-1519744346363-dc1b7b6f3c2d", "2026-03-14", "9234567810", "lost"),
-        (220110, "Smartphone found in mess hall", "Phone", "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9", "2026-03-14", "9345612789", "found")
-    ]
-
-    cursor.executemany(
-        """
-        INSERT INTO lost_and_found
-        (roll_no, description, item_name, image, date, contact, report_type)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-        """,
-        data
-    )
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return {"message": "10 lost & found items inserted"}
-
-@app.route("/populate-facility-timings")
-def populate_facility_timings():
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    data = [
-        ("Gym","Monday","06:00","10:00",0),
-        ("Gym","Tuesday","06:00","10:00",0),
-        ("Gym","Wednesday","06:00","10:00",0),
-        ("Gym","Thursday","06:00","10:00",0),
-        ("Gym","Friday","06:00","10:00",0),
-        ("Gym","Saturday","07:00","12:00",0),
-        ("Gym","Sunday",None,None,1),
-
-        ("Mess","Monday","07:00","21:00",0),
-        ("Mess","Tuesday","07:00","21:00",0),
-        ("Mess","Wednesday","07:00","21:00",0),
-        ("Mess","Thursday","07:00","21:00",0),
-        ("Mess","Friday","07:00","21:00",0),
-        ("Mess","Saturday","07:00","21:00",0),
-        ("Mess","Sunday","07:00","21:00",0),
-
-        ("Common Room","Monday","10:00","22:00",0),
-        ("Common Room","Tuesday","10:00","22:00",0),
-        ("Common Room","Wednesday","10:00","22:00",0),
-        ("Common Room","Thursday","10:00","22:00",0),
-        ("Common Room","Friday","10:00","23:00",0),
-        ("Common Room","Saturday","10:00","23:00",0),
-        ("Common Room","Sunday","10:00","22:00",0),
-
-        ("Convenience Store","Monday","09:00","20:00",0),
-        ("Convenience Store","Tuesday","09:00","20:00",0),
-        ("Convenience Store","Wednesday","09:00","20:00",0),
-        ("Convenience Store","Thursday","09:00","20:00",0),
-        ("Convenience Store","Friday","09:00","21:00",0),
-        ("Convenience Store","Saturday","10:00","18:00",0),
-        ("Convenience Store","Sunday",None,None,1)
-    ]
-
-    cursor.executemany(
-        """
-        INSERT INTO timings
-        (facility, day, start_time, end_time, is_closed)
-        VALUES (%s,%s,%s,%s,%s)
-        """,
-        data
-    )
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return {"message": "Facility timings added"}
-
 # ==================== ANALYTICS ENDPOINTS ====================
 
 @app.route("/analytics-overview", methods=["GET"])
@@ -3656,6 +3304,441 @@ def meals_analytics():
     except Exception as e:
         print(str(e))
         return jsonify({"message":"Failed meal analytics"}), 500
+
+@app.route("/dev/populate-all", methods=["POST"])
+def populate_all():
+
+    import random
+    from datetime import datetime, timedelta
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        # ---------------- USERS ----------------
+        students = []
+        for i in range(300):
+            roll = 100000 + i
+            room = random.randint(100, 500)
+
+            cursor.execute(
+                """
+                INSERT IGNORE INTO users
+                (name,email,password,user_type,is_verified,status,room,roll_no,created_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    f"Student {i}",
+                    f"{roll}@gmail.com",
+                    generate_password_hash("1234"),
+                    "student",
+                    True,
+                    "approved",
+                    room,
+                    roll,
+                    datetime(2022,1,1) + timedelta(days=random.randint(0,1500))
+                )
+            )
+            students.append((roll, room))
+
+        # wardens
+        for i in range(8):
+            cursor.execute(
+                """
+                INSERT IGNORE INTO users
+                (name,email,password,user_type,is_verified,status)
+                VALUES (%s,%s,%s,%s,%s,%s)
+                """,
+                (f"Warden {i}", f"warden{i}@gmail.com", generate_password_hash("1234"), "warden", True, "approved")
+            )
+
+        # mess
+        for i in range(5):
+            cursor.execute(
+                """
+                INSERT IGNORE INTO users
+                (name,email,password,user_type,is_verified,status)
+                VALUES (%s,%s,%s,%s,%s,%s)
+                """,
+                (f"Mess {i}", f"mess{i}@gmail.com", generate_password_hash("1234"), "mess", True, "approved")
+            )
+
+        # admin
+        cursor.execute(
+            """
+            INSERT IGNORE INTO users
+            (name,email,password,user_type,is_verified,status)
+            VALUES (%s,%s,%s,%s,%s,%s)
+            """,
+            ("Admin","admin@gmail.com",generate_password_hash("admin123"),"admin",True,"approved")
+        )
+
+        # ---------------- HELPERS ----------------
+
+        def random_datetime():
+            year_weights = [2022]*1 + [2023]*2 + [2024]*4 + [2025]*6 + [2026]*3
+            y = random.choice(year_weights)
+
+            m = random.randint(1,12)
+            d = random.randint(1,28)
+
+            # uneven hours
+            hour_weights = [8,9,10,11,18,19,20,21]*3 + list(range(24))
+            h = random.choice(hour_weights)
+
+            return datetime(y,m,d,h,random.randint(0,59),random.randint(0,59))
+
+        def resolved_time(base):
+            return base + timedelta(hours=random.randint(2,120))
+
+        # ---------------- COMPLAINTS ----------------
+
+        types = ["room","washroom","cleaning","laundry","gym","other"]
+        priorities = ["low","medium","high"]
+
+        for _ in range(600):
+            roll, room = random.choice(students)
+            dt = random_datetime()
+
+            status = random.choices(
+                ["pending","in_progress","resolved","rejected"],
+                weights=[2,2,5,1]
+            )[0]
+
+            updated = resolved_time(dt) if status in ["resolved","rejected"] else dt
+
+            descriptions = [
+                "Water leakage from bathroom ceiling",
+                "Fan not working properly",
+                "Room not cleaned for several days",
+                "Laundry machine not functioning",
+                "Gym equipment broken",
+                "Washroom hygiene needs attention",
+                "Light flickering continuously",
+                "Drainage blockage issue",
+                "Dust accumulation in corridor",
+                "Power socket not working"
+            ]
+
+            cursor.execute(
+                """
+                INSERT INTO complaints
+                (roll_no,room,type,description,priority,status,datetime,updated_at,note)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    roll,
+                    room,
+                    random.choice(types),
+                    random.choice(descriptions),
+                    random.choice(priorities),
+                    status,
+                    dt,
+                    updated,
+                    "Handled by maintenance" if status=="resolved" else ""
+                )
+            )
+
+        # ---------------- LEAVES ----------------
+
+        for _ in range(250):
+            roll,_ = random.choice(students)
+
+            start = random_datetime().date()
+            end = start + timedelta(days=random.randint(1,10))
+
+            status = random.choices(
+                ["pending","approved","rejected"],
+                weights=[2,5,1]
+            )[0]
+
+            cursor.execute(
+                """
+                INSERT INTO leaves
+                (roll_no,start_date,end_date,applied_date,description,status,updated_at,note)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    roll,
+                    start,
+                    end,
+                    start - timedelta(days=random.randint(1,5)),
+                    random.choice([
+                        "Going home for personal reasons",
+                        "Family function",
+                        "Medical leave",
+                        "Travel plans",
+                        "Urgent work at home"
+                    ]),
+                    status,
+                    start,
+                    "Approved by warden" if status=="approved" else ""
+                )
+            )
+
+        # ---------------- MEAL REQUESTS ----------------
+
+        meals = ["breakfast","lunch","snacks","dinner"]
+
+        for _ in range(300):
+            roll,_ = random.choice(students)
+            dt = random_datetime().date()
+
+            status = random.choices(
+                ["pending","approved","rejected"],
+                weights=[2,5,1]
+            )[0]
+
+            cursor.execute(
+                """
+                INSERT INTO meal_requests
+                (reason,day,roll_no,meal_time,status,date,reoccurring,created_at,updated_at,note)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    random.choice([
+                        "Will be late due to class",
+                        "Out of hostel for the day",
+                        "Fasting",
+                        "Travel",
+                        "Medical reason"
+                    ]),
+                    dt.strftime("%A"),
+                    roll,
+                    random.choice(meals),
+                    status,
+                    dt,
+                    random.choice([True, False]),
+                    dt,
+                    dt,
+                    ""
+                )
+            )
+
+        # ---------------- ROOM CHANGE ----------------
+
+        for _ in range(180):
+            roll, room = random.choice(students)
+
+            status = random.choices(
+                ["pending","approved","rejected"],
+                weights=[2,4,2]
+            )[0]
+
+            cursor.execute(
+                """
+                INSERT INTO room_change
+                (reason,current_room,new_room,roll_no,status,created_at,updated_at,note)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    random.choice([
+                        "Roommate conflict",
+                        "Need quieter environment",
+                        "Closer to academic block",
+                        "Health reasons",
+                        "Better ventilation required"
+                    ]),
+                    room,
+                    random.randint(100,500),
+                    roll,
+                    status,
+                    random_datetime(),
+                    random_datetime(),
+                    ""
+                )
+            )
+
+        conn.commit()
+        return jsonify({"message":"Database populated successfully"}),200
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"message":"Populate failed","error":str(e)}),500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/dev/populate-meta", methods=["POST"])
+@dev_required
+def populate_meta():
+
+    import random
+    from datetime import datetime, timedelta
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        # ---------------- MESS MENU ----------------
+
+        days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+
+        breakfasts = [
+            "Aloo paratha with curd",
+            "Poha with peanuts",
+            "Idli sambar",
+            "Bread omelette",
+            "Upma with chutney",
+            "Chole bhature",
+            "Cornflakes with milk"
+        ]
+
+        lunches = [
+            "Dal, rice, roti, mixed veg",
+            "Rajma chawal with salad",
+            "Kadhi chawal",
+            "Paneer curry with roti",
+            "Chole with rice",
+            "Sambar rice",
+            "Veg pulao with raita"
+        ]
+
+        snacks = [
+            "Samosa with chutney",
+            "Tea and biscuits",
+            "Veg sandwich",
+            "Maggi",
+            "Pakoras",
+            "Bread roll",
+            "Cookies and tea"
+        ]
+
+        dinners = [
+            "Roti, dal, sabzi",
+            "Paneer butter masala with naan",
+            "Veg biryani",
+            "Fried rice with manchurian",
+            "Dal makhani with roti",
+            "Mix veg with jeera rice",
+            "Kofta curry with roti"
+        ]
+
+        for i, day in enumerate(days):
+            cursor.execute(
+                """
+                INSERT INTO mess_menu (day, breakfast, lunch, snacks, dinner)
+                VALUES (%s,%s,%s,%s,%s)
+                ON DUPLICATE KEY UPDATE
+                breakfast=VALUES(breakfast),
+                lunch=VALUES(lunch),
+                snacks=VALUES(snacks),
+                dinner=VALUES(dinner)
+                """,
+                (
+                    day,
+                    breakfasts[i],
+                    lunches[i],
+                    snacks[i],
+                    dinners[i]
+                )
+            )
+
+        # ---------------- TIMINGS ----------------
+
+        facilities = [
+            ("Mess", "07:30:00", "22:00:00"),
+            ("Gym", "06:00:00", "21:00:00"),
+            ("Laundry", "08:00:00", "20:00:00"),
+            ("Library", "09:00:00", "23:00:00"),
+            ("Reading Room", "00:00:00", "23:59:00"),
+        ]
+
+        for facility, start, end in facilities:
+            for day in days:
+
+                is_closed = False
+
+                # realistic closures
+                if facility == "Laundry" and day == "Sunday":
+                    is_closed = True
+                if facility == "Gym" and day == "Sunday":
+                    is_closed = random.choice([True, False])
+
+                cursor.execute(
+                    """
+                    INSERT INTO timings (facility, day, start_time, end_time, is_closed)
+                    VALUES (%s,%s,%s,%s,%s)
+                    """,
+                    (facility, day, start, end, is_closed)
+                )
+
+        # ---------------- ANNOUNCEMENTS ----------------
+
+        titles = [
+            "Water supply interruption",
+            "Mess menu updated",
+            "Gym maintenance notice",
+            "Laundry service delay",
+            "Electricity maintenance",
+            "New hostel rules update",
+            "WiFi downtime notice",
+            "Festival celebration announcement",
+            "Room inspection schedule",
+            "Cleaning drive notice"
+        ]
+
+        descriptions = [
+            "Water supply will be temporarily unavailable due to maintenance work.",
+            "Updated mess menu will be effective from next week.",
+            "Gym will remain closed due to equipment servicing.",
+            "Laundry services may be delayed due to technical issues.",
+            "Scheduled electricity maintenance may cause power outages.",
+            "New hostel guidelines have been implemented.",
+            "WiFi services may be interrupted for upgrades.",
+            "Join us for upcoming festival celebrations in the hostel.",
+            "Room inspections will be conducted by wardens.",
+            "A cleaning drive will be organized this weekend."
+        ]
+
+        types = ["general","facilities","mess","laundry","timings","other"]
+        priorities = ["low","medium","high"]
+
+        def random_datetime():
+            year_weights = [2022]*1 + [2023]*2 + [2024]*4 + [2025]*6 + [2026]*3
+            y = random.choice(year_weights)
+            m = random.randint(1,12)
+            d = random.randint(1,28)
+            h = random.randint(8,20)
+            return datetime(y,m,d,h,random.randint(0,59),0)
+
+        for _ in range(120):
+
+            dt = random_datetime()
+
+            cursor.execute(
+                """
+                INSERT INTO announcements
+                (creator_id, title, description, type, duration, priority, datetime)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    1,  # admin id (safe default)
+                    random.choice(titles),
+                    random.choice(descriptions),
+                    random.choice(types),
+                    random.randint(1,14),  # days active
+                    random.choice(priorities),
+                    dt
+                )
+            )
+
+        conn.commit()
+
+        return jsonify({"message":"Meta data populated"}),200
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"message":"Failed","error":str(e)}),500
+
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/")
 def home():
