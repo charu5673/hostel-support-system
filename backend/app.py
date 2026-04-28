@@ -1004,12 +1004,12 @@ If you didn't request this, please ignore this email.
 @app.route("/reset-password/<token>", methods=["POST"])
 def reset_password(token):
     data = request.json
-    new_password = data.get("new_password", "").strip()
+    password = data.get("password", "").strip()
 
-    if not new_password:
+    if not password:
         return jsonify({"message": "New password is required"}), 400
 
-    if len(new_password) < 6:
+    if len(password) < 6:
         return jsonify({"message": "Password must be at least 6 characters"}), 400
 
     try:
@@ -1019,7 +1019,7 @@ def reset_password(token):
         return jsonify({"message": "Reset link invalid or expired"}), 400
 
     try:
-        password_hash = generate_password_hash(new_password)
+        password_hash = generate_password_hash(password)
 
         conn = get_db_connection()
         cursor = conn.cursor()

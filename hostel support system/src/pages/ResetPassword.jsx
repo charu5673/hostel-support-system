@@ -31,11 +31,11 @@ function ResetPassword() {
 
     try {
       const res = await loadingFetch(
-        `${Constants.API}${Constants.ROUTES.RESET_PASSWORD}`,
+        `${Constants.API}${Constants.ROUTES.RESET_PASSWORD}/${token}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, password }),
+          body: JSON.stringify({ password }),
           credentials: "include"
         }
       )
