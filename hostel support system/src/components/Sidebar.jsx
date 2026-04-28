@@ -15,7 +15,7 @@ import { useState } from 'react';
 
 
 
-function Sidebar({options, changePage, isOpen, onClose}) {
+function Sidebar({options, changePage}) {
 
   let defaultState = [];
   for(let i = 0; i < options.length; i++) {
@@ -33,19 +33,20 @@ function Sidebar({options, changePage, isOpen, onClose}) {
   }
 
   return (
-    <div className={`sidebar-outer ${isOpen ? 'open' : ''}`}>
-      <button className="sidebar-close-btn" onClick={onClose} aria-label="Close menu">×</button>
-      <h1 className='sidebar-title'>Hostel<br></br>Link</h1>
-      <div className='sidebar-options'>
-        {
-          options.map((o, i) => {
-            return (
-              <SidebarOption key={crypto.randomUUID()} name = {o.name} icon={o.svg} extensions={o.actions} state={optionsState[i]} setState={() => handleArrowClick(i)} changePage={changePage} />
-            );
-          })
-        }
+    <div className={`sidebar-outer`}>
+      <div className={`sidebar-inner`}>
+        <h1 className='sidebar-title'>Hostel<br></br>Link</h1>
+        <div className='sidebar-options'>
+          {
+            options.map((o, i) => {
+              return (
+                <SidebarOption key={crypto.randomUUID()} name = {o.name} icon={o.svg} extensions={o.actions} state={optionsState[i]} setState={() => handleArrowClick(i)} changePage={changePage} />
+              );
+            })
+          }
+        </div>
+        <div className='sidebar-profile-row'></div>
       </div>
-      <div className='sidebar-profile-row'></div>
     </div>
   );
 }

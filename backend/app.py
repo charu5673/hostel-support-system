@@ -1,9 +1,8 @@
 import traceback
-
+from jwt import ExpiredSignatureError
 from flask import Flask,request, jsonify
 from flask_cors import CORS
 from flask_mail import Mail, Message
-from jwt import ExpiredSignatureError
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -55,8 +54,8 @@ app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token"
-app.config["JWT_COOKIE_SECURE"] = True
-app.config["JWT_COOKIE_SAMESITE"] = "None"
+app.config["JWT_COOKIE_SECURE"] = False
+app.config["JWT_COOKIE_SAMESITE"] = "Lax"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
 
@@ -3305,7 +3304,7 @@ def meals_analytics():
         print(str(e))
         return jsonify({"message":"Failed meal analytics"}), 500
 
-@app.route("/dev/populate-all", methods=["POST"])
+@app.route("/dev/populate-all")
 def populate_all():
 
     import random
@@ -3562,7 +3561,7 @@ def populate_all():
         cursor.close()
         conn.close()
 
-@app.route("/dev/populate-meta", methods=["POST"])
+@app.route("/dev/populate-meta")
 def populate_meta():
 
     import random
