@@ -3563,7 +3563,6 @@ def populate_all():
         conn.close()
 
 @app.route("/dev/populate-meta", methods=["POST"])
-@dev_required
 def populate_meta():
 
     import random
