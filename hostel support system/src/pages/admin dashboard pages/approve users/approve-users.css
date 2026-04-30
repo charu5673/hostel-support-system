@@ -100,3 +100,90 @@
   background: #e74c3c;
   color: white;
 }
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .approve-users-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .approve-users-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .approve-users-outer h2 {
+    font-size: 20px;
+    margin-top: 30px;
+  }
+  
+  .user-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .user-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .users-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .user-card {
+    padding: 12px;
+  }
+  
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .user-header h3 {
+    font-size: 14px;
+  }
+  
+  .user-role,
+  .user-email {
+    font-size: 11px;
+  }
+  
+  .user-header-right {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .user-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .user-actions {
+    flex-wrap: wrap;
+  }
+  
+  .user-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .approve-users-outer {
+    padding: 12px;
+  }
+  
+  .approve-users-outer h1 {
+    font-size: 20px;
+  }
+}

@@ -202,6 +202,154 @@
   display: block;
 }
 
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .report-item-outer,
+  .check-request-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .item-form {
+    height: auto;
+    max-height: calc(100vh - 120px);
+    padding: 16px;
+  }
+  
+  .report-item-outer h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .item-form label {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .item-form input,
+  .item-form select,
+  .item-form textarea {
+    font-size: 16px;
+    padding: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .item-form textarea {
+    font-size: 14px;
+  }
+  
+  .item-submit-btn {
+    font-size: 20px;
+    padding: 8px;
+  }
+  
+  .upload-box {
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+  
+  .upload-box p {
+    font-size: 14px;
+  }
+  
+  .item-image-preview {
+    max-width: 150px;
+  }
+  
+  .report-image {
+    max-width: 40vw;
+    max-height: 15vh;
+  }
+  
+  .check-request-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .requests-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .request-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .request-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .request-card {
+    padding: 12px;
+  }
+  
+  .request-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .request-header h3 {
+    font-size: 14px;
+  }
+  
+  .request-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .request-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .request-description {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .cancel-request-button {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-item-outer,
+  .check-request-outer {
+    padding: 12px;
+  }
+  
+  .report-item-outer h2 {
+    font-size: 20px;
+  }
+  
+  .item-form label {
+    font-size: 14px;
+  }
+  
+  .item-form input,
+  .item-form select,
+  .item-form textarea {
+    font-size: 14px;
+  }
+  
+  .item-submit-btn {
+    font-size: 18px;
+  }
+  
+  .check-request-outer h1 {
+    font-size: 20px;
+  }
+}
+
 .cancel-request-button:hover{
   background:#c0392b;
 }

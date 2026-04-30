@@ -198,6 +198,110 @@
   background: #218838;
 }
 
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .view_config-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .view_config-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .view_config-outer h2 {
+    font-size: 20px;
+    margin-top: 30px;
+  }
+  
+  .configs-list {
+    height: auto;
+    max-height: calc(100vh - 150px);
+  }
+  
+  .config-card {
+    padding: 12px;
+  }
+  
+  .config-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .config-header h3 {
+    font-size: 14px;
+  }
+  
+  .config-type {
+    font-size: 11px;
+  }
+  
+  .config-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .config-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .config-value-section {
+    margin-top: 8px;
+  }
+  
+  .config-display-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .config-value {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .config-edit-btn {
+    margin-left: 0;
+    width: 100%;
+    padding: 8px;
+  }
+  
+  .config-input,
+  .config-select {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  
+  .config-edit-buttons {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .config-save-btn,
+  .config-edit-buttons button:last-child {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view_config-outer {
+    padding: 12px;
+  }
+  
+  .view_config-outer h1 {
+    font-size: 20px;
+  }
+}
+
 .config-cancel-btn {
   padding: 8px 16px;
   border-radius: 6px;

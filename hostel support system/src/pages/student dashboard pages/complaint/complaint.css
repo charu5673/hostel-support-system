@@ -3,6 +3,8 @@
 .make-complaint-outer {
   padding: 30px;
   height: 90vh;
+  grid-row: 2/3;
+  grid-column: 2/3;
 }
 
 .complaint-form {
@@ -67,6 +69,8 @@
 .check-complaints-outer {
   padding: 30px;
   height: 90vh;
+  grid-row: 2/3;
+  grid-column: 2/3;
 }
 
 .check-complaints-outer h1 {
@@ -194,4 +198,152 @@
 
 .delete-complaint-button:hover{
   background:#c0392b;
+}
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .make-complaint-outer,
+  .check-complaints-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .complaint-form {
+    height: auto;
+    max-height: calc(100vh - 120px);
+    padding: 16px;
+  }
+  
+  .make-complaint-outer h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .complaint-form label {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .complaint-form input,
+  .complaint-form select,
+  .complaint-form textarea {
+    font-size: 16px;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .complaint-form textarea {
+    font-size: 14px;
+  }
+  
+  .complaint-submit-btn {
+    font-size: 20px;
+    padding: 8px;
+  }
+  
+  .check-complaints-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .complaints-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .complaint-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .complaint-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .complaint-card {
+    padding: 12px;
+  }
+  
+  .complaint-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .complaint-header h3 {
+    font-size: 14px;
+  }
+  
+  .complaint-type {
+    font-size: 11px;
+  }
+  
+  .complaint-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .complaint-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .complaint-description {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .complaint-meta {
+    margin-bottom: 6px;
+  }
+  
+  .complaint-meta-priority {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .complaint-note {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .delete-complaint-button {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .make-complaint-outer,
+  .check-complaints-outer {
+    padding: 12px;
+  }
+  
+  .make-complaint-outer h2 {
+    font-size: 20px;
+  }
+  
+  .complaint-form label {
+    font-size: 14px;
+  }
+  
+  .complaint-form input,
+  .complaint-form select,
+  .complaint-form textarea {
+    font-size: 14px;
+  }
+  
+  .complaint-submit-btn {
+    font-size: 18px;
+  }
+  
+  .check-complaints-outer h1 {
+    font-size: 20px;
+  }
 }

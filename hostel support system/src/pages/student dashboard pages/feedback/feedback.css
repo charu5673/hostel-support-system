@@ -63,3 +63,73 @@
   background-color: var(--blue);
   color: var(--white);
 }
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .share-feedback-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .feedback-form {
+    height: auto;
+    max-height: calc(100vh - 120px);
+    padding: 16px;
+  }
+  
+  .share-feedback-outer h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .feedback-form label {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .feedback-form input,
+  .feedback-form select,
+  .feedback-form textarea {
+    font-size: 16px;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .feedback-form textarea {
+    font-size: 14px;
+  }
+  
+  .feedback-submit-btn {
+    font-size: 20px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .share-feedback-outer {
+    padding: 12px;
+  }
+  
+  .share-feedback-outer h2 {
+    font-size: 20px;
+  }
+  
+  .feedback-form label {
+    font-size: 14px;
+  }
+  
+  .feedback-form input,
+  .feedback-form select,
+  .feedback-form textarea {
+    font-size: 14px;
+  }
+  
+  .feedback-submit-btn {
+    font-size: 18px;
+  }
+}

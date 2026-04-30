@@ -198,6 +198,154 @@
 
 /* Warden view styles */
 .view-leave-outer {
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .apply-leave-outer,
+  .check-leave-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .leave-form {
+    height: auto;
+    max-height: calc(100vh - 120px);
+    padding: 16px;
+  }
+  
+  .apply-leave-outer h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .leave-form label {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .leave-form input,
+  .leave-form select,
+  .leave-form textarea {
+    font-size: 16px;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .leave-form textarea {
+    font-size: 14px;
+  }
+  
+  .leave-submit-btn {
+    font-size: 20px;
+    padding: 8px;
+  }
+  
+  .check-leave-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .leaves-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .leave-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .leave-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .leave-card {
+    padding: 12px;
+  }
+  
+  .leave-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .leave-header h3 {
+    font-size: 14px;
+  }
+  
+  .leave-dates {
+    font-size: 11px;
+  }
+  
+  .leave-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .leave-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .leave-description {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .leave-meta {
+    justify-content: flex-start;
+  }
+  
+  .leave-meta-date {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .leave-note {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .cancel-leave-button {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .apply-leave-outer,
+  .check-leave-outer {
+    padding: 12px;
+  }
+  
+  .apply-leave-outer h2 {
+    font-size: 20px;
+  }
+  
+  .leave-form label {
+    font-size: 14px;
+  }
+  
+  .leave-form input,
+  .leave-form select,
+  .leave-form textarea {
+    font-size: 14px;
+  }
+  
+  .leave-submit-btn {
+    font-size: 18px;
+  }
+  
+  .check-leave-outer h1 {
+    font-size: 20px;
+  }
+}
   padding: 30px;
   height: 90vh;
 }

@@ -37,3 +37,51 @@
   color: var(--blue);
   font-weight: 800;
 }
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .check-timings-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .check-timings-outer h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .timings-table {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .timings-table th,
+  .timings-table td {
+    padding: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .check-timings-outer {
+    padding: 12px;
+  }
+  
+  .check-timings-outer h2 {
+    font-size: 20px;
+  }
+  
+  .timings-table th,
+  .timings-table td {
+    padding: 6px;
+    font-size: 12px;
+  }
+}

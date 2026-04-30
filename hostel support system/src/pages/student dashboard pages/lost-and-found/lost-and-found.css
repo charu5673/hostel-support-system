@@ -110,3 +110,88 @@
 .request-contact {
   margin-top: 10px;
 }
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .check-request-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .check-request-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .requests-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .request-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .request-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .request-card {
+    padding: 12px;
+  }
+  
+  .request-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .request-header h3 {
+    font-size: 14px;
+  }
+  
+  .request-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .request-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .request-body {
+    gap: 6px;
+  }
+  
+  .request-description {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .request-contact {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .report-image {
+    max-width: 40vw;
+    max-height: 15vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .check-request-outer {
+    padding: 12px;
+  }
+  
+  .check-request-outer h1 {
+    font-size: 20px;
+  }
+}

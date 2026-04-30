@@ -18,6 +18,15 @@ function Dashboard() {
 
   const [user, setUser] = useState(null)
   const [currentPageIndex, setCurrentPageIndex] = useState(Number(sessionStorage.getItem("dashboard-index")) || 0)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     const loadUser = async () => {
@@ -69,7 +78,7 @@ function Dashboard() {
   }
 
   return (
-    <div className='dashboard-outer'>
+    <div className={`dashboard-outer ${isMobile ? 'dashboard-mobile' : ''}`}>
       
       {
         user ?

@@ -93,4 +93,91 @@
   color: #333;
   line-height: 1.4;
   display: inline-block;
+  width: fit-content;
+}
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .view-feedback-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .view-feedback-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .view-feedback-outer h2 {
+    font-size: 20px;
+    margin-top: 30px;
+  }
+  
+  .feedback-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .feedback-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .feedback-filter-row input {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  
+  .feedback-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .feedback-card {
+    padding: 12px;
+  }
+  
+  .feedback-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .feedback-header h3 {
+    font-size: 14px;
+  }
+  
+  .feedback-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .feedback-meta {
+    margin-bottom: 6px;
+  }
+  
+  .feedback-meal {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .feedback-description {
+    font-size: 13px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-feedback-outer {
+    padding: 12px;
+  }
+  
+  .view-feedback-outer h1 {
+    font-size: 20px;
+  }
 }

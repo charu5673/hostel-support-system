@@ -185,3 +185,148 @@
 .cancel-request-button:hover{
   background:#c0392b;
 }
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .meal-request-outer,
+  .check-request-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .request-form {
+    height: auto;
+    max-height: calc(100vh - 120px);
+    padding: 16px;
+  }
+  
+  .meal-request-outer h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .request-form label {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .request-form input,
+  .request-form select,
+  .request-form textarea {
+    font-size: 16px;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .request-form textarea {
+    font-size: 14px;
+  }
+  
+  .meal-request-btn {
+    font-size: 20px;
+    padding: 8px;
+    margin-top: 16px;
+  }
+  
+  .check-request-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .requests-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .request-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .request-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .request-card {
+    padding: 12px;
+  }
+  
+  .request-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .request-header h3 {
+    font-size: 14px;
+  }
+  
+  .request-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .request-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .request-description {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .request-meta {
+    justify-content: flex-start;
+  }
+  
+  .request-meta-date {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .request-note {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .cancel-request-button {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .meal-request-outer,
+  .check-request-outer {
+    padding: 12px;
+  }
+  
+  .meal-request-outer h2 {
+    font-size: 20px;
+  }
+  
+  .request-form label {
+    font-size: 14px;
+  }
+  
+  .request-form input,
+  .request-form select,
+  .request-form textarea {
+    font-size: 14px;
+  }
+  
+  .meal-request-btn {
+    font-size: 18px;
+  }
+  
+  .check-request-outer h1 {
+    font-size: 20px;
+  }
+}

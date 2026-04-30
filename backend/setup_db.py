@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     user_type ENUM('student','warden','mess','admin') NOT NULL,
     is_verified BOOLEAN DEFAULT FALSE,
+    is_approved BOOLEAN DEFAULT FALSE,
     status ENUM('pending','approved','rejected') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

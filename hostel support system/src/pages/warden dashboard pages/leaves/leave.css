@@ -181,3 +181,103 @@
 .leave-actions button:nth-child(3):hover {
   background: #c0392b;
 }
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .view-leaves-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .view-leaves-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .view-leaves-outer h2 {
+    font-size: 22px;
+    margin-top: 30px;
+  }
+  
+  .leaves-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .leave-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .leave-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .leave-card {
+    padding: 12px;
+  }
+  
+  .leave-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .leave-header h3 {
+    font-size: 14px;
+  }
+  
+  .leave-dates {
+    font-size: 11px;
+  }
+  
+  .leave-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .leave-date,
+  .status-badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .leave-description {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .leave-note {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .leave-actions {
+    flex-direction: column;
+  }
+  
+  .leave-actions button {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-leaves-outer {
+    padding: 12px;
+  }
+  
+  .view-leaves-outer h1 {
+    font-size: 20px;
+  }
+  
+  .view-leaves-outer h2 {
+    font-size: 18px;
+  }
+}

@@ -44,7 +44,6 @@ export const Constants = {
     'GET_USER_ROOM_CHANGE_REQUESTS': '/get-user-room-change-requests',
     'CANCEL_ROOM_CHANGE_REQUEST': '/cancel-room-change-request',
     'GET_ROOM_CHANGE_REQUESTS': '/get-room-change-requests',
-    'UPDATE_ROOM_CHANGE_STATUS': '/update-room-change-status',
 
     // Item Reports
     'REPORT_ITEM': '/report-item',
@@ -63,14 +62,17 @@ export const Constants = {
     'UPDATE_FACILITY_TIMINGS': '/update-facility-timings',
     'REMOVE_FACILITY_TIMING': '/remove-facility-timing',
 
-    // Update status
+    // Update status complaint, meal request, leaves
     'UPDATE_STATUS': '/update-status',
+    'UPDATE_ROOM_CHANGE_STATUS': '/update-room-change-status',
 
     // Admin
+    // email domains
     'GET_EMAIL_DOMAINS': '/get-email-domains',
     'ADD_EMAIL_DOMAIN': '/add-email-domain',
     'REMOVE_EMAIL_DOMAIN': '/remove-email-domain',
     'TOGGLE_EMAIL_DOMAIN': '/toggle-email-domain',
+    // users
     'GET_ALL_USERS': '/get-all-users',
     'DELETE_USER': '/delete-user',
     'ADD_USER': '/add-user',
@@ -81,8 +83,10 @@ export const Constants = {
     'GET_USER_ITEM_REPORTS_BY_ROLL': '/get-user-item-reports-by-roll',
     'GET_USER_FEEDBACK_BY_ROLL': '/get-user-feedback-by-roll',
     'GET_USER_ANNOUNCEMENTS_BY_ID': '/get-user-announcements-by-id',
+    // system config
     'GET_CONFIG': '/get-config',
     'UPDATE_CONFIG': '/update-config',
+    // approved/reject
     'GET_PENDING_USERS': '/get-pending-users',
     'UPDATE_USER_STATUS': '/update-user-status',
 

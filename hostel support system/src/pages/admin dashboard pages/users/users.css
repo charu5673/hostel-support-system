@@ -198,8 +198,102 @@
   background: #f8f8f8;
   padding: 4px 10px;
   border-radius: 4px;
-  font-size: 12px;
-  color: #666;
+}
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .view-users-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .view-users-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .view-users-outer h2 {
+    font-size: 20px;
+    margin-top: 30px;
+  }
+  
+  .user-type-filter {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .user-type-filter button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .add-user-btn {
+    width: 100%;
+    aspect-ratio: auto;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .users-list {
+    height: auto;
+    max-height: calc(100vh - 250px);
+  }
+  
+  .user-card {
+    padding: 12px;
+  }
+  
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .user-header h3 {
+    font-size: 14px;
+  }
+  
+  .user-email {
+    font-size: 11px;
+  }
+  
+  .user-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .user-type-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .verified-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .user-details {
+    gap: 8px;
+  }
+  
+  .user-detail-item {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-users-outer {
+    padding: 12px;
+  }
+  
+  .view-users-outer h1 {
+    font-size: 20px;
+  }
 }
 
 /* User Actions */
@@ -220,12 +314,12 @@
 }
 
 .delete-user-btn {
-  background: #e74c3c;
+  background: #e74c3c !important;
   color: white;
 }
 
 .delete-user-btn:hover {
-  background: #c0392b;
+  background: #c0392b !important;
 }
 
 /* User Detail Modal */

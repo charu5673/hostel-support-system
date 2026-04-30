@@ -167,3 +167,93 @@
 .meal-request-actions button:last-child:hover {
   background: #c0392b;
 }
+
+/* ============================================================
+   Responsive Styles
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .view-meal-requests-outer {
+    padding: 16px;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .view-meal-requests-outer h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .meal-request-filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .meal-request-filter-row button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .meal-requests-list {
+    height: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .meal-request-card {
+    padding: 12px;
+  }
+  
+  .meal-request-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .meal-request-header h3 {
+    font-size: 14px;
+  }
+  
+  .meal-request-meta {
+    font-size: 11px;
+  }
+  
+  .meal-request-header-right {
+    flex-wrap: wrap;
+  }
+  
+  .status-badge,
+  .meal-request-date {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .meal-request-description {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .meal-request-note {
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .meal-request-actions {
+    flex-wrap: wrap;
+  }
+  
+  .meal-request-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-meal-requests-outer {
+    padding: 12px;
+  }
+  
+  .view-meal-requests-outer h1 {
+    font-size: 20px;
+  }
+}
